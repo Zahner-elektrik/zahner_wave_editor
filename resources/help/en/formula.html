@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Formula reference</title><style>
+body{font:15px/1.6 system-ui,sans-serif;color:#1e2823;background:#f5f7f6;margin:0}main{max-width:820px;margin:auto;padding:42px 48px}h1{font-size:2.1rem;margin:0;color:#a02832}h2{margin-top:2rem;border-bottom:2px solid #d9e1de;padding-bottom:.3rem}.lead{font-size:1.1rem;color:#3b5c69}.notice{background:#fff4e8;border-left:5px solid #a02832;padding:12px 18px;border-radius:5px}code{background:#e4ebe8;border-radius:4px;padding:.15rem .4rem;font-family:monospace}li{margin:.75rem 0}a{color:#145099;font-weight:600;text-decoration:none}a:hover{text-decoration:underline}
+</style></head>
+<body>
+<main>
+<h1>Formula segments</h1>
+<p class="lead">A formula returns the segment value at time <code>t</code>. By default, <code>t</code> starts at zero for each segment repetition.</p><p>Enable <b>Global time</b> to use time from the beginning of the document.</p>
+<h2>Constants and operators</h2>
+<p>Constants: <code>pi</code>, <code>e</code>. Operators include <code>+ - * / ^</code>, comparisons, and parentheses.</p>
+<h2>Functions</h2>
+<p><code>sin cos tan asin acos atan sinh cosh tanh sqrt exp ln log log2 log10 abs sign min max rint</code></p>
+<h2>Examples</h2>
+<ul>
+  <li><code>sin(2*pi*10*t)</code> - 10-cycle-per-time-unit sine</li>
+  <li><code>0.5 + 2*exp(-t)</code> - exponential decay with offset</li>
+  <li><code>max(-1, min(1, 4*t-1))</code> - limited ramp</li>
+</ul>
+<p>Functions use radians. Invalid expressions are marked in the editor and are not committed.</p>
+<p class="notice"><b>Powers:</b> Write <code>t^2</code>, for example. The editor preserves <code>^</code> as the formula operator.</p>
+<p><a href="index.html">← Back to overview</a></p>
+</main>
+</body>
+</html>

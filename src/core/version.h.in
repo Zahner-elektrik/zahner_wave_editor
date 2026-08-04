@@ -1,0 +1,28 @@
+// SPDX-FileCopyrightText: 2026 Zahner-Elektrik GmbH & Co. KG
+// SPDX-License-Identifier: GPL-3.0-only
+//
+// Template for the generated build/generated/zwe_version.h - the version numbers
+// the editor reports at run time, taken from the repository's git tags by
+// scripts/cmake/version.cmake.
+//
+// Plain #defines and a classic include guard only: the generated header is read
+// by the C++ code *and* by the Windows resource compiler, which understands
+// neither #pragma once nor anything else C++.
+
+#ifndef ZWE_VERSION_H
+#define ZWE_VERSION_H
+
+// Numeric release version, e.g. 26.32.0 for tag v26.32.0. Missing components
+// are 0 so the four-part Windows VERSIONINFO number is always complete.
+#define ZWE_VERSION_MAJOR @ZWE_VERSION_MAJOR@
+#define ZWE_VERSION_MINOR @ZWE_VERSION_MINOR@
+#define ZWE_VERSION_PATCH @ZWE_VERSION_PATCH@
+#define ZWE_VERSION_TWEAK @ZWE_VERSION_TWEAK@
+#define ZWE_VERSION_STRING "@ZWE_VERSION@"
+
+// Build identity: the tag itself when the build sits on it, otherwise the tag
+// plus the commit distance, the commit hash and a dirty marker - or the bare
+// commit hash in a repository without tags.
+#define ZWE_VERSION_FULL_STRING "@ZWE_VERSION_FULL@"
+
+#endif  // ZWE_VERSION_H

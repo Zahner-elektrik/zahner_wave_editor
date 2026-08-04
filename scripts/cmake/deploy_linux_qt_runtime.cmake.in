@@ -1,0 +1,89 @@
+set(_zwe_install_prefix "${CMAKE_INSTALL_PREFIX}")
+set(_zwe_bindir "@CMAKE_INSTALL_BINDIR@")
+set(_zwe_libdir "@CMAKE_INSTALL_LIBDIR@")
+set(_zwe_qt_prefix "@_zwe_qt_prefix@")
+set(_zwe_qt_library_dir "@_zwe_qt_library_dir@")
+set(_zwe_qt_plugins_dir "@_zwe_qt_plugins_dir@")
+
+set(_zwe_executable "${_zwe_install_prefix}/${_zwe_bindir}/ZahnerWaveEditor")
+set(_zwe_runtime_destination "${_zwe_install_prefix}/${_zwe_libdir}")
+
+if(NOT EXISTS "${_zwe_executable}")
+    message(FATAL_ERROR "Cannot deploy Qt runtime: ${_zwe_executable} does not exist")
+endif()
+
+file(MAKE_DIRECTORY "${_zwe_runtime_destination}")
+
+file(REAL_PATH "${_zwe_qt_prefix}" _zwe_qt_prefix_real)
+file(REAL_PATH "${_zwe_qt_library_dir}" _zwe_qt_library_dir_real)
+
+file(GLOB_RECURSE _zwe_qt_source_plugins
+    "${_zwe_qt_plugins_dir}/iconengines/*.so"
+    "${_zwe_qt_plugins_dir}/imageformats/*.so"
+    "${_zwe_qt_plugins_dir}/networkinformation/*.so"
+    "${_zwe_qt_plugins_dir}/platforminputcontexts/*.so"
+    "${_zwe_qt_plugins_dir}/platforms/*.so"
+    "${_zwe_qt_plugins_dir}/platformthemes/*.so"
+    "${_zwe_qt_plugins_dir}/styles/*.so"
+    "${_zwe_qt_plugins_dir}/tls/*.so"
+    "${_zwe_qt_plugins_dir}/wayland-decoration-client/*.so"
+    "${_zwe_qt_plugins_dir}/wayland-graphics-integration-client/*.so"
+    "${_zwe_qt_plugins_dir}/wayland-shell-integration/*.so"
+    "${_zwe_qt_plugins_dir}/xcbglintegrations/*.so"
+)
+
+set(_zwe_runtime_dependency_args
+    RESOLVED_DEPENDENCIES_VAR _zwe_resolved_runtime_dependencies
+    UNRESOLVED_DEPENDENCIES_VAR _zwe_unresolved_runtime_dependencies
+    CONFLICTING_DEPENDENCIES_PREFIX _zwe_conflicting_runtime_dependencies
+    EXECUTABLES "${_zwe_executable}"
+    DIRECTORIES
+        "${_zwe_qt_library_dir}"
+        "${_zwe_qt_prefix}/lib"
+)
+
+if(_zwe_qt_source_plugins)
+    list(APPEND _zwe_runtime_dependency_args MODULES ${_zwe_qt_source_plugins})
+endif()
+
+file(GET_RUNTIME_DEPENDENCIES ${_zwe_runtime_dependency_args})
+
+if(_zwe_unresolved_runtime_dependencies)
+    list(JOIN _zwe_unresolved_runtime_dependencies "\n  " _zwe_unresolved_display)
+    message(WARNING "Unresolved runtime dependencies while deploying Zahner Wave Editor:\n  ${_zwe_unresolved_display}")
+endif()
+
+foreach(_zwe_dependency IN LISTS _zwe_resolved_runtime_dependencies)
+    file(REAL_PATH "${_zwe_dependency}" _zwe_dependency_real)
+
+    set(_zwe_should_copy FALSE)
+    string(FIND "${_zwe_dependency_real}" "${_zwe_qt_prefix_real}/" _zwe_qt_prefix_position)
+    string(FIND "${_zwe_dependency_real}" "${_zwe_qt_library_dir_real}/libQt6" _zwe_qt_library_position)
+    if(_zwe_qt_prefix_position EQUAL 0)
+        set(_zwe_should_copy TRUE)
+    elseif(_zwe_qt_library_position EQUAL 0)
+        set(_zwe_should_copy TRUE)
+    endif()
+
+    if(_zwe_should_copy)
+        get_filename_component(_zwe_dependency_name "${_zwe_dependency_real}" NAME)
+        get_filename_component(_zwe_dependency_dir "${_zwe_dependency_real}" DIRECTORY)
+        set(_zwe_dependency_files "${_zwe_dependency_real}")
+        if(_zwe_dependency_name MATCHES "^(.+)\\.so(\\..*)?$")
+            set(_zwe_dependency_stem "${CMAKE_MATCH_1}")
+            file(GLOB _zwe_dependency_chain
+                "${_zwe_dependency_dir}/${_zwe_dependency_stem}.so*"
+            )
+            if(_zwe_dependency_chain)
+                set(_zwe_dependency_files ${_zwe_dependency_chain})
+            endif()
+        endif()
+        file(INSTALL
+            DESTINATION "${_zwe_runtime_destination}"
+            TYPE SHARED_LIBRARY
+            FOLLOW_SYMLINK_CHAIN
+            FILES ${_zwe_dependency_files}
+        )
+        message(STATUS "Deployed Qt runtime dependency: ${_zwe_dependency_name}")
+    endif()
+endforeach()

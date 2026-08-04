@@ -1,0 +1,30 @@
+cmake_minimum_required(VERSION 3.20)
+
+if(NOT DEFINED BUILD_DIR)
+    message(FATAL_ERROR "BUILD_DIR is required")
+endif()
+
+if(NOT IS_DIRECTORY "${BUILD_DIR}")
+    message(FATAL_ERROR "BUILD_DIR does not exist: ${BUILD_DIR}")
+endif()
+
+if(NOT DEFINED PACKAGE_EXTENSION)
+    if(WIN32)
+        set(PACKAGE_EXTENSION "exe")
+    elseif(APPLE)
+        set(PACKAGE_EXTENSION "dmg")
+    else()
+        set(PACKAGE_EXTENSION "run")
+    endif()
+endif()
+
+file(GLOB package_candidates "${BUILD_DIR}/ZahnerWaveEditor-*.${PACKAGE_EXTENSION}")
+list(LENGTH package_candidates package_count)
+if(package_count EQUAL 0)
+    message(FATAL_ERROR "No ZahnerWaveEditor .${PACKAGE_EXTENSION} package artifacts found in ${BUILD_DIR}")
+endif()
+
+message(STATUS "Found ${package_count} package artifact(s):")
+foreach(package_file IN LISTS package_candidates)
+    message(STATUS " - ${package_file}")
+endforeach()

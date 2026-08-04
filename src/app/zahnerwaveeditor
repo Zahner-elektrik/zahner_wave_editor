@@ -1,0 +1,11 @@
+#!/bin/bash
+SCRIPT_PATH=$(dirname "$(realpath "$0")")
+if [[ "$(uname -s)" == "Darwin" ]]; then
+    exec "${SCRIPT_PATH}/../ZahnerWaveEditor.app/Contents/MacOS/ZahnerWaveEditor" "$@"
+else
+    lib_path="${SCRIPT_PATH}/../lib"
+    plugin_path="${SCRIPT_PATH}/../plugins"
+    export LD_LIBRARY_PATH="${lib_path}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+    export QT_PLUGIN_PATH="${plugin_path}${QT_PLUGIN_PATH:+:${QT_PLUGIN_PATH}}"
+    exec "$SCRIPT_PATH/ZahnerWaveEditor" "$@"
+fi

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="de">
+<head><meta charset="utf-8"><title>Wave-Editor-Übersicht</title><style>
+body{font:15px/1.6 system-ui,sans-serif;color:#1e2823;background:#f5f7f6;margin:0}main{max-width:820px;margin:auto;padding:42px 48px}h1{font-size:2.1rem;margin:0;color:#a02832}h2{margin-top:2rem;border-bottom:2px solid #d9e1de;padding-bottom:.3rem}.lead{font-size:1.15rem;color:#3b5c69}.card{background:#fff;border-left:5px solid #145099;border-radius:6px;padding:18px 24px;box-shadow:0 2px 10px #1e282318}li{margin:.65rem 0}code{background:#e9efed;border-radius:4px;padding:.12rem .35rem}a{color:#145099;font-weight:600;text-decoration:none}a:hover{text-decoration:underline}.next{display:inline-block;margin-top:1rem;padding:.65rem 1rem;border:2px solid #145099;border-radius:5px}
+</style></head>
+<body>
+<main>
+<h1>Zahner Wave Editor</h1>
+<p class="lead">Wellenformen übersichtlich aus Ebenen und zeitlich geordneten Segmenten aufbauen.</p>
+<div class="card">Prüfen Sie das Ergebnis direkt im Diagramm und exportieren Sie Abtastwerte als CSV für Zahner Lab oder als binäre Double-Werte für eine <code>zahner_link</code>-Wave-Ressource.</div>
+<h2>Grundlegender Ablauf</h2>
+<ol>
+  <li>Fügen Sie im Struktur-Dock eine Ebene hinzu oder wählen Sie eine aus.</li>
+  <li>Fügen Sie Segmente hinzu, verschieben oder skalieren Sie sie. Bearbeiten Sie das ausgewählte Element unter Eigenschaften.</li>
+  <li>Stellen Sie die Value Rate des Dokuments ein und verwenden Sie <b>Bearbeiten &gt; Gesamte Wellenform skalieren</b>, wenn das vollständige Signal in Amplitude oder Zeit skaliert werden soll.</li>
+  <li>Prüfen Sie mit <b>Wellenform einpassen</b> das vollständige Signal.</li>
+  <li>Speichern Sie das bearbeitbare <code>.zwj</code>-Dokument oder exportieren Sie die Abtastwerte.</li>
+</ol>
+<p>Deaktivierte Ebenen tragen nicht zur kombinierten Wellenform bei. Beim Export kann die Value Rate des Dokuments vorübergehend überschrieben werden.</p>
+<h2>Wie Ebenen verrechnet werden</h2>
+<p>Die Ebenen einer Stufe werden von oben nach unten verrechnet. Die erste aktive Ebene beginnt das Ergebnis, jede darunter wird entweder <b>addiert</b> oder <b>multipliziert</b> - die Reihenfolge im Struktur-Dock ist damit Teil des Signals, sobald etwas multipliziert. Modus, Name und Randverhalten der ausgewählten Ebene werden im Eigenschaften-Dock bearbeitet; eine multiplizierende Ebene ist im Baum mit <code>×</code> gekennzeichnet.</p>
+<p>Eine Ebene, die kürzer ist als das Dokument, braucht eine Regel für die Zeit nach ihrem Ende. Das leistet die Einstellung <b>Außerhalb</b>:</p>
+<ul>
+  <li><b>Neutral</b> - es ändert sich nichts: 0 beim Addieren, 1 beim Multiplizieren. Das ist die Voreinstellung und der Grund, weshalb eine kurze Fensterebene den Rest des Signals unberührt lässt, statt ihn stummzuschalten.</li>
+  <li><b>Null</b> - immer 0; eine multiplizierende Ebene schneidet damit alles nach ihrem Ende ab.</li>
+  <li><b>Letzten Wert halten</b> - der nächstliegende Wert der eigenen Kurve, gehalten vor ihrem Anfang und nach ihrem Ende.</li>
+  <li><b>Wiederholen</b> - die Ebene wiederholt sich, mit ihrer eigenen Dauer als Periode.</li>
+</ul>
+<p><b>Gruppen</b> verrechnen ihre Ebenen zuerst untereinander und bringen das Ergebnis in ihre eigene Stufe ein. Genau das macht <i>A + (B × Fenster)</i> möglich - ohne Gruppe wirkt eine multiplizierende Ebene immer auf alles über ihr. Anlegen über <b>Struktur &gt; Gruppe hinzufügen</b>, eine vorhandene Ebene über ihr Kontextmenü in eine neue Gruppe legen, eine Gruppe mit <b>Gruppe auflösen</b> wieder auflösen. Eine Gruppe hat einen eigenen Modus und ein eigenes Randverhalten; bei <b>Wiederholen</b> oder <b>Letzten Wert halten</b> wiederholt bzw. friert ihr gesamter Teilbaum ein, Formelsegmente eingeschlossen.</p>
+<h2>Fenster und Hüllkurven</h2>
+<p>Ein <b>Fenster</b>-Segment ist das Stück, das eine multiplizierende Ebene braucht: Rechteck, Hann, Hamming, Blackman, Blackman-Harris, Tukey, Gauß, Kaiser oder ein einfaches Trapez mit Anstiegs- und Abfallzeit. Die Form erstreckt sich über eine Wiederholung, sodass eine Wiederholungszahl daraus einen Burst-Zug macht. <b>Amplitude</b> und <b>Offset</b> skalieren sie: 0,5 und 0,5 modulieren zwischen halb und voll statt bis auf null, eine negative Amplitude macht aus dem Fenster eine Kerbe.</p>
+<h2>Pulsvoltammetrie</h2>
+<p>Die Kategorie <b>Elektrochemie</b> unter <b>Abschnitt hinzufügen</b> enthält die drei Pulsmethoden mit denselben Parametern, die auch ihre IM7-Jobs annehmen. Anders als in den übrigen Kategorien ist jede davon eine vollständige Messwellenform und nicht eine Form, aus der man eine baut. Alle drei laufen eine Treppe vom <b>Startwert</b> in Richtung <b>Endwert</b> in Schritten von <b>Schrittwert</b> ab: Die Scanrichtung folgt allein aus Start und Ende, ein Ende unterhalb des Starts ergibt also einen kathodischen Sweep, und Schritt-, Impuls- und Amplitudenwerte bleiben positive Beträge.</p>
+<p>Wo die Treppe beginnt, ist von Methode zu Methode verschieden; die Schrittzahl unter den Parametern ist in jedem Fall der schlichte Quotient. Die Normalpulsvoltammetrie setzt ihren ersten Impuls auf den Startwert selbst und ihren letzten auf den Endwert, hält also eine Stufe mehr als dieser Quotient. Die beiden anderen beginnen einen Schritt hinter dem Startwert.</p>
+<ul>
+  <li><b>Normal Pulse Voltammetry</b> - die Wellenform ruht auf einem eigenen <b>Basiswert</b>, und jeden Schritt eröffnet ein Impuls: Der erste Impuls ist der <b>Startwert</b>, jeder folgende steht einen Schrittwert näher am <b>Endwert</b>, und nach jedem Impuls fällt die Wellenform auf den Basiswert zurück. Weil die Basislinie ein eigener Wert ist, dürfen die Impulse auf sie zulaufen statt sich nur von ihr zu entfernen - eine Basislinie von 0 mit Impulsen von 500 mV herab auf 10 mV wird genau so geschrieben. <b>Schrittzeit</b> ist die Dauer eines Schritts, <b>Impulsdauer</b> der Anteil davon, den der Impuls hält.</li>
+  <li><b>Differential Pulse Voltammetry</b> - eine Treppe, bei der jeden Schritt ein Impuls von <b>Impulswert</b> eröffnet. Da der Impuls zuerst kommt, steigt er von dem Niveau aus, das unmittelbar davor gehalten wurde; der Schritt legt sich danach einen Schrittwert darüber. <b>Impuls invertieren</b> schickt ihn gegen die Scanrichtung.</li>
+  <li><b>Square Wave Voltammetry</b> - eine Rechteckschwingung von ±<b>Amplitude</b> um die Treppe, ein Schritt je <b>Periode</b>. Die erhöhte Halbperiode kommt zuerst, unabhängig von der Sweeprichtung.</li>
+</ul>
+<p>Wie viele <b>Schritte</b> es gibt, folgt aus den Parametern - und damit auch, wie lange der Sweep dauert. Das Panel zeigt die Schrittzahl unter ihnen an und hält <b>Dauer</b> beim Bearbeiten auf genau einem Sweep. Das Dauerfeld bleibt Ihnen überlassen: Eine kürzere Dauer schneidet den Sweep ab, eine längere hält seinen letzten Wert, und eine <b>Wiederholung</b> lässt den ganzen Sweep erneut ablaufen. Jede Parameteränderung passt die Dauer wieder an den Sweep an.</p>
+<p>Die Pulsflanken liegen genau dort, wo die Zeiten sie hinsetzen. Anders als IM7, das eine Werteliste mit fester Rate aufbaut, wertet der Editor die Wellenform direkt aus und quantisiert die Pulszeit nicht auf einen Bruchteil des Schritts.</p>
+<h2>Orientierung im Diagramm</h2>
+<p>Jede Ebene hat ihre eigene Farbe. Das Diagramm zeichnet ihre Kurve darin, das Struktur-Dock färbt die Symbole der Ebene ebenso ein, und <b>Ansicht &gt; Legende anzeigen</b> listet sie neben der Ergebniskurve auf - so lässt sich jede Kurve dem Knoten zuordnen, zu dem sie gehört. Eine Ebene, die das Ergebnis nicht erreicht, weil sie oder eine ihrer Gruppen abgeschaltet ist, steht mit gestrichelter Linie in der Legende.</p>
+<p>Was ausgewählt ist, wird etwas breiter und deckend gezeichnet, während die anderen Kurven zurücktreten: bei einer Ebene ihre ganze Kurve, bei einem Abschnitt nur dessen eigener Bereich. Gruppen haben keine eigene Kurve, eine ausgewählte Gruppe ändert im Diagramm daher nichts. Ein Klick auf den Hintergrund des Diagramms oder in die leere Fläche unter dem Baum im Struktur-Dock wählt nichts aus und stellt alle Kurven wieder gleich dar. Ziehen am Hintergrund verschiebt den Ausschnitt und behält die Auswahl.</p>
+<p>Das <b>Mausrad</b> zoomt um den Mauszeiger: über dem Diagramm skaliert es die Zeit, mit <code>Strg</code> die Werteachse. Über einer der beiden Skalen - den Zahlen unter oder links vom Diagramm - skaliert es nur diese Achse, sodass sich die Zeit dehnen lässt, ohne die Amplitude anzutasten, und umgekehrt. Der Doppelpfeil des Mauszeigers zeigt dort, in welche Richtung das Rad wirkt.</p>
+<p>Die beiden Skalen sind auch sonst Griffe für ihre Achse: <b>Ziehen</b> verschiebt nur diese Achse - so folgen Sie einem Signal in der Zeit und behalten die Amplitude, in die Sie hineingezoomt haben -, und ein <b>Doppelklick</b> passt nur diese Achse ein: die Zeitskala auf das ganze Dokument, die Werteskala auf die Werte im gerade sichtbaren Zeitfenster. Beide Achsen zugleich passt weiterhin <b>Wellenform einpassen</b> ein.</p>
+<h2>Punkte auf der Zeichenfläche bearbeiten</h2>
+<p>Ein <b>Punkte</b>-Abschnitt wird direkt im Diagramm geformt. Ein Doppelklick fügt einen Punkt hinzu, Ziehen an einem Griff verschiebt ihn, <code>Entf</code> entfernt den ausgewählten. Dieselben Koordinaten stehen im Eigenschaften-Dock und können dort exakt eingetippt werden.</p>
+<ul>
+  <li><b>Am Raster ausrichten</b> - die Leiste über dem Diagramm bestimmt, wo ein gezogener Punkt oder eine Abschnittsgrenze landen kann. <b>Raster</b> legt fest, wie fein diese Positionen liegen: als Bruchteil einer Gitterzelle, der beim Hineinzoomen feiner wird und immer eine runde Zahl bleibt, oder als <b>feste Schrittweite</b>, die Sie selbst eintragen. Solange die Schrittweite dem Gitter folgt, zeigen die beiden Felder die gerade wirksame Schrittweite an.</li>
+  <li>Halten Sie beim Ziehen <code>Strg</code>, um einen Punkt frei neben dem Raster zu platzieren. Bei ausgeschaltetem Ausrichten wirkt <code>Strg</code> umgekehrt und zieht den Punkt auf das Raster.</li>
+  <li>Die <b>Pfeiltasten</b> setzen den ausgewählten Punkt von Rasterposition zu Rasterposition - der genaue Weg, einen Wert einzustellen; <code>Umschalt</code> mit einer Pfeiltaste springt eine ganze Gitterzelle weit.</li>
+</ul>
+<h2>Exportformate</h2>
+<p>Welches Format Sie brauchen, hängt davon ab, was die Datei liest:</p>
+<ul>
+  <li><b>CSV</b> - ein Dezimalwert pro Zeile, gerundet auf die gewählte Anzahl signifikanter Stellen. Dieses Textformat liest der Custom-Waveform-Block in <b>Zahner Lab</b>.</li>
+  <li><b>Binär</b> - reine Little-Endian-IEEE-754-<code>double</code>-Werte, 8 Bytes pro Abtastwert und sonst nichts. Das ist der Bytestrom, den die Python-Bibliothek <b><code>zahner_link</code></b> als WAVE-Ressource hochlädt: <code>create_resource_from_file()</code> übernimmt die exportierte Datei unverändert - ohne Umwandlung und ohne Genauigkeitsverlust. Zahner Lab liest dieses Format nicht.</li>
+</ul>
+<p>Keines der beiden Formate speichert die Value Rate: Abtastwert <i>i</i> ist der Wert bei <i>t = i / Rate</i>. Übergeben Sie dem Auftrag als <code>value_rate</code> die Rate, mit der die Datei exportiert wurde.</p>
+<h2>Einstellungen</h2>
+<p>Sprache der Oberfläche, Farbschema und Akzentfarbe werden unter <b>Bearbeiten &gt; Einstellungen</b> festgelegt und bis zum nächsten Start gespeichert. Die Sprache folgt dem Betriebssystem, bis Sie eine auswählen; eine geänderte Sprache wird beim nächsten Start des Editors angewendet.</p>
+<a class="next" href="formula.html">Formelreferenz öffnen →</a>
+</main>
+</body>
+</html>

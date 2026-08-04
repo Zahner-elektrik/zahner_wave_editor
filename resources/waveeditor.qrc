@@ -1,0 +1,47 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="waveeditor.png">icons/waveeditor.png</file>
+        <file alias="waveeditor.svg">icons/waveeditor.svg</file>
+        <file alias="waveeditor-dark.svg">icons/waveeditor-dark.svg</file>
+        <file alias="toolbar/new.svg">icons/toolbar/new.svg</file>
+        <file alias="toolbar/open.svg">icons/toolbar/open.svg</file>
+        <file alias="toolbar/save.svg">icons/toolbar/save.svg</file>
+        <file alias="toolbar/import-csv.svg">icons/toolbar/import-csv.svg</file>
+        <file alias="toolbar/export-csv.svg">icons/toolbar/export-csv.svg</file>
+        <file alias="toolbar/undo.svg">icons/toolbar/undo.svg</file>
+        <file alias="toolbar/redo.svg">icons/toolbar/redo.svg</file>
+        <file alias="toolbar/add-layer.svg">icons/toolbar/add-layer.svg</file>
+        <file alias="toolbar/add-group.svg">icons/toolbar/add-group.svg</file>
+        <file alias="toolbar/layer.svg">icons/toolbar/layer.svg</file>
+        <file alias="toolbar/group.svg">icons/toolbar/group.svg</file>
+        <file alias="toolbar/add-segment.svg">icons/toolbar/add-segment.svg</file>
+        <file alias="toolbar/remove-selected.svg">icons/toolbar/remove-selected.svg</file>
+        <file alias="toolbar/move-up.svg">icons/toolbar/move-up.svg</file>
+        <file alias="toolbar/move-down.svg">icons/toolbar/move-down.svg</file>
+        <file alias="toolbar/fit-waveform.svg">icons/toolbar/fit-waveform.svg</file>
+        <file alias="toolbar/dark-theme.svg">icons/toolbar/dark-theme.svg</file>
+        <file alias="toolbar/wave-dc.svg">icons/toolbar/wave-dc.svg</file>
+        <file alias="toolbar/wave-ramp.svg">icons/toolbar/wave-ramp.svg</file>
+        <file alias="toolbar/wave-sine.svg">icons/toolbar/wave-sine.svg</file>
+        <file alias="toolbar/wave-square.svg">icons/toolbar/wave-square.svg</file>
+        <file alias="toolbar/wave-triangle.svg">icons/toolbar/wave-triangle.svg</file>
+        <file alias="toolbar/wave-chirp.svg">icons/toolbar/wave-chirp.svg</file>
+        <file alias="toolbar/wave-ricker.svg">icons/toolbar/wave-ricker.svg</file>
+        <file alias="toolbar/wave-pulse.svg">icons/toolbar/wave-pulse.svg</file>
+        <file alias="toolbar/wave-exponential.svg">icons/toolbar/wave-exponential.svg</file>
+        <file alias="toolbar/wave-formula.svg">icons/toolbar/wave-formula.svg</file>
+        <file alias="toolbar/wave-points.svg">icons/toolbar/wave-points.svg</file>
+        <file alias="toolbar/wave-window.svg">icons/toolbar/wave-window.svg</file>
+        <file alias="toolbar/wave-npv.svg">icons/toolbar/wave-npv.svg</file>
+        <file alias="toolbar/wave-dpv.svg">icons/toolbar/wave-dpv.svg</file>
+        <file alias="toolbar/wave-swv.svg">icons/toolbar/wave-swv.svg</file>
+        <file alias="help/back.svg">icons/help/back.svg</file>
+        <file alias="help/home.svg">icons/help/home.svg</file>
+        <file alias="help/forward.svg">icons/help/forward.svg</file>
+        <file alias="help/formula.svg">icons/help/formula.svg</file>
+    </qresource>
+    <qresource prefix="/licenses">
+        <file alias="muparser/LICENSE">../third_party/muparser/LICENSE</file>
+        <file alias="qt/LGPL-3.0.txt">licenses/qt/LGPL-3.0.txt</file>
+    </qresource>
+</RCC>

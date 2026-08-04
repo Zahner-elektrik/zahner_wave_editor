@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Zahner Wave Editor</DisplayName>
+    <Description>Standalone waveform editor for creating custom wave signal files.</Description>
+    <Description xml:lang="de">Eigenständiger Signalform-Editor zum Erstellen von Custom-Wave-Signaldateien.</Description>
+    <Name>ZahnerWaveEditor.Application</Name>
+    <Version>@GIT_TAG@</Version>
+    <ReleaseDate>@TODAY@</ReleaseDate>
+</Package>

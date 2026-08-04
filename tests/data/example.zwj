@@ -1,0 +1,32 @@
+{
+    "format": "zahner-wave",
+    "version": 1,
+    "name": "Ramp with ripple",
+    "description": "Linear sweep with a 50 Hz disturbance on top",
+    "sample_rate": 10000.0,
+    "display_unit": "V",
+    "export": { "last_csv_path": "", "significant_digits": 9 },
+    "layers": [
+        {
+            "name": "Sweep",
+            "enabled": true,
+            "mode": "add",
+            "segments": [
+                { "type": "dc",   "duration": 0.5, "repeat": 1,
+                  "params": { "value": 0.0 } },
+                { "type": "ramp", "duration": 2.0, "repeat": 1,
+                  "params": { "start_value": 0.0, "end_value": 1.0 } }
+            ]
+        },
+        {
+            "name": "Ripple",
+            "enabled": true,
+            "mode": "add",
+            "segments": [
+                { "type": "sine", "duration": 2.5, "repeat": 1,
+                  "params": { "amplitude": 0.01, "frequency": 50.0,
+                              "phase_deg": 0.0, "offset": 0.0 } }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Wave Editor overview</title><style>
+body{font:15px/1.6 system-ui,sans-serif;color:#1e2823;background:#f5f7f6;margin:0}main{max-width:820px;margin:auto;padding:42px 48px}h1{font-size:2.1rem;margin:0;color:#a02832}h2{margin-top:2rem;border-bottom:2px solid #d9e1de;padding-bottom:.3rem}.lead{font-size:1.15rem;color:#3b5c69}.card{background:#fff;border-left:5px solid #145099;border-radius:6px;padding:18px 24px;box-shadow:0 2px 10px #1e282318}li{margin:.65rem 0}code{background:#e9efed;border-radius:4px;padding:.12rem .35rem}a{color:#145099;font-weight:600;text-decoration:none}a:hover{text-decoration:underline}.next{display:inline-block;margin-top:1rem;padding:.65rem 1rem;border:2px solid #145099;border-radius:5px}
+</style></head>
+<body>
+<main>
+<h1>Zahner Wave Editor</h1>
+<p class="lead">Build waveforms clearly from layers and time-ordered segments.</p>
+<div class="card">Inspect the result directly in the plot and export sampled values as CSV for Zahner Lab, or as binary doubles for a <code>zahner_link</code> wave resource.</div>
+<h2>Basic workflow</h2>
+<ol>
+  <li>Add or select a layer in the Structure dock.</li>
+  <li>Add, insert, move, or resize segments. Edit the selected item in Properties.</li>
+  <li>Set the document Value Rate and use <b>Edit &gt; Scale Entire Waveform</b> when the complete signal needs amplitude or time scaling.</li>
+  <li>Use <b>Fit Waveform</b> to review the full signal.</li>
+  <li>Save the editable <code>.zwj</code> document or export the sampled values.</li>
+</ol>
+<p>Disabled layers do not contribute to the combined waveform. An export can temporarily override the document value rate.</p>
+<h2>How layers are combined</h2>
+<p>The layers of a level are combined from top to bottom. The first active layer starts the result, and each one below it is either <b>added</b> or <b>multiplied</b> in - so the order in the Structure dock is part of the signal as soon as something multiplies. Mode, name and edge policy of the selected layer are edited in the Properties dock; a multiplying layer is marked with <code>×</code> in the tree.</p>
+<p>A layer that is shorter than the document needs a rule for the time beyond its end, which the <b>Outside</b> setting provides:</p>
+<ul>
+  <li><b>Neutral</b> - nothing changes: 0 when adding, 1 when multiplying. This is the default, and the reason a short window layer leaves the rest of the signal alone instead of silencing it.</li>
+  <li><b>Zero</b> - always 0, so a multiplying layer cuts everything after its end.</li>
+  <li><b>Hold last</b> - the nearest value of the layer's own curve, held before its start and after its end.</li>
+  <li><b>Loop</b> - the layer repeats, with its own duration as the period.</li>
+</ul>
+<p><b>Groups</b> combine their layers among themselves first and take the result into their own level, which is what makes <i>A + (B × window)</i> possible - without a group, a multiplying layer would always act on everything above it. Add one with <b>Structure &gt; Add Group</b>, put an existing layer into a new group from its context menu, and dissolve a group again with <b>Ungroup</b>. A group carries a mode and an edge policy of its own; with <b>Loop</b> or <b>Hold last</b> its whole subtree replays or freezes, formula segments included.</p>
+<h2>Windows and envelopes</h2>
+<p>A <b>Window</b> segment is the piece a multiplying layer needs: rectangular, Hann, Hamming, Blackman, Blackman-Harris, Tukey, Gauss, Kaiser, or a plain trapezoid with a rise and a fall time. The shape spans one repetition, so a repeat count turns it into a burst train. <b>Amplitude</b> and <b>Offset</b> scale it: 0.5 and 0.5 modulate between half and full instead of down to zero, and a negative amplitude turns the window into a notch.</p>
+<h2>Pulse voltammetry</h2>
+<p>The <b>Electrochemistry</b> category of <b>Add Segment</b> holds the three pulse methods, with the same parameters their IM7 jobs take. Unlike the other categories, each of these is a complete measurement waveform rather than a shape to build one from. All three walk a staircase from <b>Start value</b> towards <b>End value</b> in steps of <b>Step value</b>: the scan direction follows from start and end alone, so an end below the start gives a cathodic sweep and the step, pulse and amplitude values stay positive magnitudes.</p>
+<p>Where the staircase begins differs between the methods, and the step count below the parameters is the plain quotient in every case. Normal pulse voltammetry sends its first pulse on the start value itself and its last on the end value, so it holds one level more than that quotient. The other two open one step past the start value.</p>
+<ul>
+  <li><b>Normal Pulse Voltammetry</b> - the waveform rests on a <b>Base value</b> of its own and a pulse opens every step: the first pulse is the <b>Start value</b>, each following one stands one step value closer to the <b>End value</b>, and after every pulse the waveform drops back to the base value. Because the baseline is a separate value, the pulses may run towards it as well as away from it - a baseline of 0 with pulses walking from 500 mV down to 10 mV is written just like that. <b>Step time</b> is how long a step lasts, <b>Pulse time</b> how much of it the pulse holds.</li>
+  <li><b>Differential Pulse Voltammetry</b> - a staircase with a pulse of <b>Pulse value</b> opening every step. Because the pulse comes first, it rises from the level held just before it and the step then settles one step value above that. <b>Invert pulse</b> sends it against the scan direction.</li>
+  <li><b>Square Wave Voltammetry</b> - a square wave of ±<b>Amplitude</b> around the staircase, one step per <b>Period</b>. The raised half period comes first, whichever way the sweep runs.</li>
+</ul>
+<p>How many steps there are follows from the parameters, and so does how long the sweep takes - the panel shows the step count below them, and keeps <b>Duration</b> at exactly one sweep while you edit. The duration field stays yours to change: a shorter one cuts the sweep off, a longer one holds its last level, and a <b>Repeat</b> count runs the whole sweep again. Editing any parameter fits the duration back to the sweep.</p>
+<p>The pulse edges sit exactly where the times put them; unlike IM7, which builds a value list at a fixed rate, the editor evaluates the waveform directly and does not quantize the pulse time to a fraction of the step.</p>
+<h2>Finding your way around the plot</h2>
+<p>Every layer has a color of its own. The plot draws its curve in it, the Structure dock tints the layer's icons with the same color, and <b>View &gt; Show Legend</b> lists them next to the result curve - so a curve can be traced back to the node it belongs to. A layer that does not reach the result, because it or one of its groups is switched off, is listed with a dashed line.</p>
+<p>What you select is drawn a little wider and fully opaque while the other curves step back: a layer shows its whole curve that way, a segment only its own stretch of it. Groups have no curve of their own, so selecting one changes nothing in the plot. Clicking the plot background, or the empty space below the tree in the Structure dock, selects nothing and puts every curve back to the same weight. Dragging the background pans the view and keeps the selection.</p>
+<p>The <b>mouse wheel</b> zooms around the pointer: over the plot it scales time, and with <code>Ctrl</code> the value axis. Over one of the two scales - the numbers below the plot or left of it - it scales that axis alone, so time can be stretched without touching the amplitude and the other way round. The double arrow of the cursor shows which direction the wheel works in there.</p>
+<p>The two scales are handles for their axis in every other respect as well: <b>dragging</b> one shifts only that axis, which is how you follow a signal in time while keeping the amplitude you zoomed in on, and <b>double-clicking</b> one fits only that axis - the time scale to the whole document, the value scale to the values inside the visible time window. <b>Fit Waveform</b> remains the way to fit both at once.</p>
+<h2>Editing points on the canvas</h2>
+<p>A <b>Points</b> segment is shaped directly in the plot. Double-click on it to add a point, drag a handle to move it, and press <code>Delete</code> to remove the selected one. The same coordinates are listed in the Properties dock, where they can be typed in exactly.</p>
+<ul>
+  <li><b>Snap to grid</b> - the bar above the plot decides where a dragged point or segment boundary can land. <b>Grid</b> sets how fine those positions are: a fraction of one grid cell, which gets finer as you zoom in and always stays a round number, or a <b>fixed step</b> you enter yourself. While the step follows the grid, the two fields show the step currently in effect.</li>
+  <li>Hold <code>Ctrl</code> while dragging to place a point freely, off the grid. With snapping switched off, <code>Ctrl</code> does the opposite and pulls the point onto the grid.</li>
+  <li>The <b>arrow keys</b> move the selected point from grid position to grid position, which is the precise way to set a value; <code>Shift</code> together with an arrow key jumps a whole grid cell.</li>
+</ul>
+<h2>Export formats</h2>
+<p>Which one you want depends on what reads the file:</p>
+<ul>
+  <li><b>CSV</b> - one decimal value per line, rounded to the chosen number of significant digits. This is the text format the <b>Zahner Lab</b> Custom Waveform block reads.</li>
+  <li><b>Binary</b> - raw little-endian IEEE-754 <code>double</code> values, 8 bytes per sample and nothing else. This is the byte stream the <b><code>zahner_link</code></b> Python library uploads as a WAVE resource, so <code>create_resource_from_file()</code> takes the exported file as it is - no conversion, no loss of precision. Zahner Lab does not read this format.</li>
+</ul>
+<p>Neither format stores the value rate: sample <i>i</i> is the value at <i>t = i / rate</i>. Pass the rate the file was exported with as the job's <code>value_rate</code>.</p>
+<h2>Settings</h2>
+<p>Interface language, color theme and accent color are set in <b>Edit &gt; Settings</b> and are remembered for the next start. The language follows the operating system until you choose one; a changed language is applied the next time the editor starts.</p>
+<a class="next" href="formula.html">Open the formula reference →</a>
+</main>
+</body>
+</html>

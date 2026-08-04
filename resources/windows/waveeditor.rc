@@ -1,0 +1,58 @@
+// Executable icon shown by Explorer, the taskbar, the Start menu shortcut and
+// the .zwj file association. It reads the same multi-resolution icon that the
+// rest of the project uses, so resources/icons stays the single icon source.
+IDI_ICON1 ICON DISCARDABLE "../icons/waveeditor.ico"
+
+// Version and vendor shown on the Details tab of the executable's file
+// properties, and read by installers and inventory tools. The numbers come from
+// the git tag through the generated header; see scripts/cmake/version.cmake. Its
+// include path is added by src/app/CMakeLists.txt.
+#include "zwe_version.h"
+
+// Numeric literals instead of the constants from windows.h: they are all this
+// block would need from it, and leaving it out keeps the resource script
+// independent of the Windows SDK headers. The names are the ones windows.h uses.
+#define ZWE_VS_VERSION_INFO       1
+#define ZWE_VS_FFI_FILEFLAGSMASK  0x0000003fL
+#define ZWE_VS_FF_DEBUG           0x00000001L
+#define ZWE_VOS_NT_WINDOWS32      0x00040004L
+#define ZWE_VFT_APP               0x00000001L
+#define ZWE_VFT2_UNKNOWN          0x00000000L
+
+// The resource has to carry ID 1: that is where GetFileVersionInfo() and with it
+// Explorer, the installer and every inventory tool look for it. Naming the
+// resource anything else compiles fine and then reports no version at all.
+ZWE_VS_VERSION_INFO VERSIONINFO
+FILEVERSION ZWE_VERSION_MAJOR, ZWE_VERSION_MINOR, ZWE_VERSION_PATCH, ZWE_VERSION_TWEAK
+PRODUCTVERSION ZWE_VERSION_MAJOR, ZWE_VERSION_MINOR, ZWE_VERSION_PATCH, ZWE_VERSION_TWEAK
+FILEFLAGSMASK ZWE_VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+FILEFLAGS ZWE_VS_FF_DEBUG
+#else
+FILEFLAGS 0x00000000L
+#endif
+FILEOS ZWE_VOS_NT_WINDOWS32
+FILETYPE ZWE_VFT_APP
+FILESUBTYPE ZWE_VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        // 0409 = en-US, 04b0 = Unicode. The block only declares the language of
+        // the strings below, which are product names and version numbers.
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "Zahner-Elektrik GmbH & Co. KG"
+            VALUE "FileDescription", "Zahner Wave Editor"
+            VALUE "FileVersion", ZWE_VERSION_FULL_STRING
+            VALUE "InternalName", "ZahnerWaveEditor"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Zahner-Elektrik GmbH & Co. KG"
+            VALUE "OriginalFilename", "ZahnerWaveEditor.exe"
+            VALUE "ProductName", "Zahner Wave Editor"
+            VALUE "ProductVersion", ZWE_VERSION_FULL_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 0x04b0
+    END
+END
