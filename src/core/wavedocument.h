@@ -29,6 +29,7 @@ struct ExportSettings {
 };
 
 struct WaveDocument {
+    QString id;
     QString name;
     QString description;
     double sampleRate     = 1000.0;  // values per second, > 0

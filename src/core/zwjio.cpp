@@ -1278,6 +1278,9 @@ QJsonObject writeDocument(const WaveDocument& document) {
     QJsonObject obj;
     obj[QStringLiteral("format")]           = kFormatMagic;
     obj[QStringLiteral("version")]          = kFormatVersion;
+    if (! document.id.isEmpty()) {
+        obj[QStringLiteral("id")] = document.id;
+    }
     obj[QStringLiteral("name")]             = document.name;
     obj[QStringLiteral("description")]      = document.description;
     obj[QStringLiteral("sample_rate")]      = document.sampleRate;
@@ -1352,6 +1355,11 @@ LoadResult load(const QString& filePath) {
     }
 
     WaveDocument document;
+    if (root.contains(QStringLiteral("id"))) {
+        if (! readString(root, QStringLiteral("id"), QString(), document.id, error)) {
+            return LoadResult{std::nullopt, error};
+        }
+    }
     if (! readString(root, QStringLiteral("name"), QString(), document.name, error)) {
         return LoadResult{std::nullopt, error};
     }

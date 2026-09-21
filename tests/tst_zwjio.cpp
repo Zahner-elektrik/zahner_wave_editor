@@ -18,6 +18,7 @@ QString testDataPath(const QString& fileName) {
 // fields, so the round-trip test exercises every reader/writer code path.
 WaveDocument makeSampleDocument() {
     WaveDocument document;
+    document.id                               = QStringLiteral("2f8a1c04d7e14b6b9c3a5e7f10b2d6a8");
     document.name                             = QStringLiteral("Round-trip sample");
     document.description                      = QStringLiteral("Covers every segment type");
     document.sampleRate                       = 2500.0;
@@ -204,6 +205,8 @@ private slots:
     void rejectsNonFiniteNumbers();
     void rejectsMissingRequiredField();
     void ignoresUnknownExtraKeys();
+    void keepsDocumentIdAndOmitsAnEmptyOne();
+    void loadsFilesWithoutAnIdAndRejectsANonStringOne();
     void defaultsMissingExportFormatToCsvAndRejectsUnknownOnes();
     void rejectsUnknownMode();
     void rejectsOutOfRangeDuty();
@@ -759,4 +762,60 @@ void TestZwjIo::rejectsBrokenWindowParams() {
 }
 
 QTEST_GUILESS_MAIN(TestZwjIo)
+void TestZwjIo::keepsDocumentIdAndOmitsAnEmptyOne() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    const WaveDocument withId = makeSampleDocument();
+    QVERIFY(! withId.id.isEmpty());
+    const QString path = dir.filePath(QStringLiteral("with-id.zwj"));
+    QVERIFY(! zwjio::save(withId, path).has_value());
+
+    const zwjio::LoadResult loaded = zwjio::load(path);
+    QVERIFY2(! loaded.error.has_value(), qPrintable(loaded.error.value_or(zwjio::Error{}).message));
+    QVERIFY(loaded.document.has_value());
+    QCOMPARE(loaded.document->id, withId.id);
+
+    WaveDocument withoutId = makeSampleDocument();
+    withoutId.id           = QString();
+    const QString bare     = dir.filePath(QStringLiteral("no-id.zwj"));
+    QVERIFY(! zwjio::save(withoutId, bare).has_value());
+
+    QFile file(bare);
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    QVERIFY(! file.readAll().contains("\"id\""));
+}
+
+void TestZwjIo::loadsFilesWithoutAnIdAndRejectsANonStringOne() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+
+    const QString legacy = dir.filePath(QStringLiteral("legacy.zwj"));
+    QFile legacyFile(legacy);
+    QVERIFY(legacyFile.open(QIODevice::WriteOnly));
+    legacyFile.write(R"({"format": "zahner-wave", "version": 1, "name": "N", "description": "",
+                         "sample_rate": 1000.0, "layers": []})");
+    legacyFile.close();
+
+    const zwjio::LoadResult legacyResult = zwjio::load(legacy);
+    QVERIFY2(
+        ! legacyResult.error.has_value(),
+        qPrintable(legacyResult.error.value_or(zwjio::Error{}).message)
+    );
+    QVERIFY(legacyResult.document.has_value());
+    QVERIFY(legacyResult.document->id.isEmpty());
+
+    const QString broken = dir.filePath(QStringLiteral("broken-id.zwj"));
+    QFile brokenFile(broken);
+    QVERIFY(brokenFile.open(QIODevice::WriteOnly));
+    brokenFile.write(R"({"format": "zahner-wave", "version": 1, "id": 42, "name": "N",
+                         "description": "", "sample_rate": 1000.0, "layers": []})");
+    brokenFile.close();
+
+    const zwjio::LoadResult brokenResult = zwjio::load(broken);
+    QVERIFY(! brokenResult.document.has_value());
+    QVERIFY(brokenResult.error.has_value());
+    QVERIFY(brokenResult.error->message.contains(QStringLiteral("id")));
+}
+
 #include "tst_zwjio.moc"

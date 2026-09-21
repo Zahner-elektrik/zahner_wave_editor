@@ -33,6 +33,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QUndoStack>
+#include <QUuid>
 #include <QVBoxLayout>
 #include <algorithm>
 #include <cmath>
@@ -1180,6 +1181,9 @@ bool MainWindow::confirmDiscardChanges() {
 }
 
 void MainWindow::setDocument(WaveDocument document, const QString& filePath) {
+    if (document.id.isEmpty()) {
+        document.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    }
     filePath_ = filePath;
     undoStack_->clear();
     undoStack_->setClean();
