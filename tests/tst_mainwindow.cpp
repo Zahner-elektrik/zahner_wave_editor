@@ -20,6 +20,7 @@
 #include <QtTest>
 #include <algorithm>
 
+#include "core/zwjio.h"
 #include "ui/canvaswidget.h"
 #include "ui/engineeringedit.h"
 #include "ui/mainwindow.h"
@@ -38,6 +39,7 @@ private slots:
     void scaleWaveformDialogCreatesUndoCommand();
     void groupsTakeNewLayersAndDissolveBackIntoTheirLevel();
     void openingADocumentLeavesNothingToUndo();
+    void savingAssignsADocumentIdOnceAndKeepsIt();
 };
 
 void TestMainWindow::openingADocumentLeavesNothingToUndo() {
@@ -370,4 +372,41 @@ void TestMainWindow::groupsTakeNewLayersAndDissolveBackIntoTheirLevel() {
 }
 
 QTEST_MAIN(TestMainWindow)
+void TestMainWindow::savingAssignsADocumentIdOnceAndKeepsIt() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("doc.zwj"));
+    QVERIFY(QFile::copy(QStringLiteral(ZWE_TEST_DATA_DIR "/example.zwj"), path));
+    QVERIFY(QFile::setPermissions(path, QFileDevice::ReadOwner | QFileDevice::WriteOwner));
+
+    const zwjio::LoadResult before = zwjio::load(path);
+    QVERIFY(before.document.has_value());
+    QVERIFY(before.document->id.isEmpty());
+
+    QString assigned;
+    {
+        MainWindow window;
+        QVERIFY(window.openDocument(path));
+        QVERIFY(QMetaObject::invokeMethod(&window, "saveDocument"));
+
+        const zwjio::LoadResult saved = zwjio::load(path);
+        QVERIFY2(
+            ! saved.error.has_value(), qPrintable(saved.error.value_or(zwjio::Error{}).message)
+        );
+        QVERIFY(saved.document.has_value());
+        assigned = saved.document->id;
+        QVERIFY(! assigned.isEmpty());
+    }
+
+    {
+        MainWindow window;
+        QVERIFY(window.openDocument(path));
+        QVERIFY(QMetaObject::invokeMethod(&window, "saveDocument"));
+
+        const zwjio::LoadResult resaved = zwjio::load(path);
+        QVERIFY(resaved.document.has_value());
+        QCOMPARE(resaved.document->id, assigned);
+    }
+}
+
 #include "tst_mainwindow.moc"
