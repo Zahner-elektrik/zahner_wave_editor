@@ -19,6 +19,8 @@ class QProgressBar;
 class QUndoStack;
 class QSpinBox;
 
+class QLocalServer;
+
 namespace zwe {
 
 class CanvasWidget;
@@ -137,6 +139,9 @@ private:
     std::optional<size_t> selectedSegmentIndex_;
     QMenu* recentFilesMenu_       = nullptr;
     bool editOnly_ = false;
+    // Listens while bound to a document, so the application that started the
+    // editor can ask for the window instead of starting a second instance.
+    QLocalServer* editOnlyServer_ = nullptr;
     QAction* newAction_    = nullptr;
     QAction* openAction_   = nullptr;
     QAction* saveAsAction_ = nullptr;

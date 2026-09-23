@@ -26,7 +26,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Widgets LinguistTools)
+find_package(Qt6 6.4 REQUIRED COMPONENTS Core Gui Network Widgets LinguistTools)
 
 # Newer macOS SDKs (Xcode 26) no longer ship the legacy AGL framework, but
 # Qt 6.8's FindWrapOpenGL still adds "-framework AGL" to its link interface,

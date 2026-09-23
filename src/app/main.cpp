@@ -7,6 +7,7 @@
 
 #include "core/version.h"
 #include "ui/appsettings.h"
+#include "ui/editonlyserver.h"
 #include "ui/mainwindow.h"
 
 int main(int argc, char* argv[]) {
@@ -55,6 +56,13 @@ int main(int argc, char* argv[]) {
             ))
         );
         return 2;
+    }
+
+    if (parser.isSet(editOnly) && zwe::editonly::requestWindow(args.first())) {
+        // Another instance is already bound to this document and has been asked
+        // to come forward; a second window on the same file would let the user
+        // edit in one and lose it when the other saves.
+        return 0;
     }
 
     zwe::MainWindow window;
