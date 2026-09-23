@@ -39,6 +39,12 @@ public:
     // drag & drop. Returns false and shows a message box on failure.
     bool openDocument(const QString& filePath);
 
+    // Binds the window to the document it currently holds: new, open, save as,
+    // the recent files list and dropping another document are taken out, so the
+    // application that started the editor keeps control over which file is
+    // edited. Everything about editing and saving that document stays.
+    void setEditOnly(bool editOnly);
+
 protected:
     void closeEvent(QCloseEvent* event) override;
     void dragEnterEvent(QDragEnterEvent* event) override;
@@ -130,6 +136,10 @@ private:
     LayerPath selectedLayerPath_;
     std::optional<size_t> selectedSegmentIndex_;
     QMenu* recentFilesMenu_       = nullptr;
+    bool editOnly_ = false;
+    QAction* newAction_    = nullptr;
+    QAction* openAction_   = nullptr;
+    QAction* saveAsAction_ = nullptr;
     QAction* saveAction_          = nullptr;
     QAction* addLayerAction_      = nullptr;
     QAction* addGroupAction_      = nullptr;
