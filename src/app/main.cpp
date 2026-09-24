@@ -7,6 +7,7 @@
 
 #include "core/version.h"
 #include "ui/appsettings.h"
+#include "ui/editonlyserver.h"
 #include "ui/mainwindow.h"
 
 int main(int argc, char* argv[]) {
@@ -32,12 +33,48 @@ int main(int argc, char* argv[]) {
         QCoreApplication::translate("main", "A .zwj waveform document to open."),
         QStringLiteral("[file]")
     );
+
+    // Bound to one document, for an editor started by another application: the
+    // ways of switching to a different file are taken out of the interface, so
+    // what the caller opened is what gets edited and saved.
+    const QCommandLineOption editOnly(
+        QStringLiteral("edit-only"),
+        QCoreApplication::translate(
+            "main",
+            "Edit only the given document: no new, open, save as or recent files."
+        )
+    );
+    parser.addOption(editOnly);
     parser.process(app);
 
-    zwe::MainWindow window;
     const QStringList args = parser.positionalArguments();
+    if (parser.isSet(editOnly) && args.isEmpty()) {
+        qCritical(
+            "%s",
+            qPrintable(QCoreApplication::translate(
+                "main", "--edit-only needs the document to edit as an argument."
+            ))
+        );
+        return 2;
+    }
+
+    if (parser.isSet(editOnly) && zwe::editonly::requestWindow(args.first())) {
+        // Another instance is already bound to this document and has been asked
+        // to come forward; a second window on the same file would let the user
+        // edit in one and lose it when the other saves.
+        return 0;
+    }
+
+    zwe::MainWindow window;
     if (! args.isEmpty()) {
-        window.openDocument(args.first());
+        if (! window.openDocument(args.first()) && parser.isSet(editOnly)) {
+            // Nothing to edit and no way to open anything else, so an empty
+            // locked-down window would be a dead end.
+            return 1;
+        }
+    }
+    if (parser.isSet(editOnly)) {
+        window.setEditOnly(true);
     }
     window.show();
 

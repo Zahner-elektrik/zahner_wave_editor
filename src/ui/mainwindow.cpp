@@ -18,6 +18,8 @@
 #include <QIcon>
 #include <QKeySequence>
 #include <QLabel>
+#include <QLocalServer>
+#include <QLocalSocket>
 #include <QLoggingCategory>
 #include <QMenu>
 #include <QMenuBar>
@@ -51,6 +53,7 @@
 #include "core/segmentcontinuity.h"
 #include "core/version.h"
 #include "core/zwjio.h"
+#include "editonlyserver.h"
 #include "exportdialog.h"
 #include "gridbar.h"
 #include "helpbrowser.h"
@@ -294,12 +297,14 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         fileMenu->addAction(toolbarIcon("new"), tr("&New"), this, &MainWindow::newDocument);
     newAction->setObjectName(QStringLiteral("newAction"));
     newAction->setShortcut(QKeySequence::New);
+    newAction_ = newAction;
 
     auto* openAction = fileMenu->addAction(
         toolbarIcon("open"), tr("&Open..."), this, &MainWindow::openDocumentDialog
     );
     openAction->setObjectName(QStringLiteral("openAction"));
     openAction->setShortcut(QKeySequence::Open);
+    openAction_ = openAction;
 
     saveAction_ = fileMenu->addAction(tr("&Save"), this, &MainWindow::saveDocument);
     saveAction_->setIcon(toolbarIcon("save"));
@@ -307,6 +312,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     saveAction_->setShortcut(QKeySequence::Save);
     auto* saveAsAction = fileMenu->addAction(tr("Save &As..."), this, &MainWindow::saveDocumentAs);
     saveAsAction->setShortcut(QKeySequence::SaveAs);
+    saveAsAction_ = saveAsAction;
 
     recentFilesMenu_ = fileMenu->addMenu(tr("Recent &Files"));
     updateRecentFilesMenu();
@@ -848,6 +854,68 @@ bool MainWindow::openDocument(const QString& filePath) {
     return true;
 }
 
+void MainWindow::setEditOnly(bool editOnly) {
+    editOnly_ = editOnly;
+    if (! editOnly_) {
+        return;
+    }
+
+    // Listen for a request to show this window. The application that started
+    // the editor has no portable way of raising another process's window, so it
+    // asks the window to raise itself, which is something Qt can do.
+    if (! filePath_.isEmpty()) {
+        const QString name = zwe::editonly::socketName(filePath_);
+        // A crashed predecessor leaves its socket behind and would block the
+        // listen; nothing else uses this name.
+        QLocalServer::removeServer(name);
+        editOnlyServer_ = new QLocalServer(this);
+        connect(editOnlyServer_, &QLocalServer::newConnection, this, [this]() {
+            while (QLocalSocket* connection = editOnlyServer_->nextPendingConnection()) {
+                connection->close();
+                connection->deleteLater();
+            }
+            // A minimized window is not raised by raise() alone, so the
+            // minimized flag has to go -- but only that one. showNormal() would
+            // also clear Qt::WindowMaximized, which drops a maximized editor
+            // back to its restored size on every further Edit click.
+            if (isMinimized()) {
+                setWindowState((windowState() & ~Qt::WindowMinimized) | Qt::WindowActive);
+            }
+            // Cheap for a window that is already visible, and the one thing that
+            // brings back a window hidden by something other than minimizing.
+            show();
+            raise();
+            // On Windows the caller has to have granted this process the right to
+            // come forward (AllowSetForegroundWindow), otherwise the task bar
+            // entry only flashes -- which is still the documented behaviour, not
+            // a failure.
+            activateWindow();
+        });
+        if (! editOnlyServer_->listen(name)) {
+            qWarning(
+                "Cannot listen for window requests on %s: %s",
+                qPrintable(name),
+                qPrintable(editOnlyServer_->errorString())
+            );
+        }
+    }
+
+    // Hidden rather than disabled: a greyed out "Open..." invites the question
+    // why it is greyed out, while an editor that simply has no way to switch
+    // documents reads as intended.
+    for (QAction* action : {newAction_, openAction_, saveAsAction_}) {
+        if (action) {
+            action->setVisible(false);
+            action->setEnabled(false);
+        }
+    }
+    if (recentFilesMenu_) {
+        recentFilesMenu_->menuAction()->setVisible(false);
+        recentFilesMenu_->setEnabled(false);
+    }
+    setAcceptDrops(false);
+}
+
 void MainWindow::closeEvent(QCloseEvent* event) {
     if (! confirmDiscardChanges()) {
         event->ignore();
@@ -858,6 +926,9 @@ void MainWindow::closeEvent(QCloseEvent* event) {
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
+    if (editOnly_) {
+        return;
+    }
     const auto urls = event->mimeData()->urls();
     if (urls.size() == 1 && urls.first().isLocalFile() &&
         urls.first().toLocalFile().endsWith(QLatin1String(".zwj"), Qt::CaseInsensitive)) {
@@ -866,6 +937,9 @@ void MainWindow::dragEnterEvent(QDragEnterEvent* event) {
 }
 
 void MainWindow::dropEvent(QDropEvent* event) {
+    if (editOnly_) {
+        return;
+    }
     const auto urls = event->mimeData()->urls();
     if (urls.size() == 1 && openDocument(urls.first().toLocalFile())) {
         event->acceptProposedAction();
@@ -1586,6 +1660,12 @@ void MainWindow::updateRecentFilesMenu() {
 }
 
 void MainWindow::addRecentFile(const QString& filePath) {
+    if (editOnly_) {
+        // The list is not reachable in this mode and is shared with the
+        // standalone editor, so a document opened on behalf of another
+        // application has no business appearing in the user's own history.
+        return;
+    }
     QStringList files = recentFiles();
     files.removeAll(filePath);
     files.prepend(filePath);

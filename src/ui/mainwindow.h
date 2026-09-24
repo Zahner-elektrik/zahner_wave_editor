@@ -19,6 +19,8 @@ class QProgressBar;
 class QUndoStack;
 class QSpinBox;
 
+class QLocalServer;
+
 namespace zwe {
 
 class CanvasWidget;
@@ -38,6 +40,12 @@ public:
     // Opens the given .zwj document. Used for the command line argument and
     // drag & drop. Returns false and shows a message box on failure.
     bool openDocument(const QString& filePath);
+
+    // Binds the window to the document it currently holds: new, open, save as,
+    // the recent files list and dropping another document are taken out, so the
+    // application that started the editor keeps control over which file is
+    // edited. Everything about editing and saving that document stays.
+    void setEditOnly(bool editOnly);
 
 protected:
     void closeEvent(QCloseEvent* event) override;
@@ -130,6 +138,13 @@ private:
     LayerPath selectedLayerPath_;
     std::optional<size_t> selectedSegmentIndex_;
     QMenu* recentFilesMenu_       = nullptr;
+    bool editOnly_ = false;
+    // Listens while bound to a document, so the application that started the
+    // editor can ask for the window instead of starting a second instance.
+    QLocalServer* editOnlyServer_ = nullptr;
+    QAction* newAction_    = nullptr;
+    QAction* openAction_   = nullptr;
+    QAction* saveAsAction_ = nullptr;
     QAction* saveAction_          = nullptr;
     QAction* addLayerAction_      = nullptr;
     QAction* addGroupAction_      = nullptr;

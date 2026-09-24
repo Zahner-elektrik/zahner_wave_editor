@@ -40,6 +40,7 @@ private slots:
     void groupsTakeNewLayersAndDissolveBackIntoTheirLevel();
     void openingADocumentLeavesNothingToUndo();
     void savingAssignsADocumentIdOnceAndKeepsIt();
+    void editOnlyRemovesEveryWayToSwitchDocuments();
 };
 
 void TestMainWindow::openingADocumentLeavesNothingToUndo() {
@@ -407,6 +408,42 @@ void TestMainWindow::savingAssignsADocumentIdOnceAndKeepsIt() {
         QVERIFY(resaved.document.has_value());
         QCOMPARE(resaved.document->id, assigned);
     }
+}
+
+void TestMainWindow::editOnlyRemovesEveryWayToSwitchDocuments() {
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString path = dir.filePath(QStringLiteral("bound.zwj"));
+    QVERIFY(QFile::copy(QStringLiteral(ZWE_TEST_DATA_DIR "/example.zwj"), path));
+    QVERIFY(QFile::setPermissions(path, QFileDevice::ReadOwner | QFileDevice::WriteOwner));
+
+    MainWindow window;
+    QVERIFY(window.openDocument(path));
+
+    auto *newAction  = window.findChild<QAction *>(QStringLiteral("newAction"));
+    auto *openAction = window.findChild<QAction *>(QStringLiteral("openAction"));
+    auto *saveAction = window.findChild<QAction *>(QStringLiteral("saveAction"));
+    QVERIFY(newAction);
+    QVERIFY(openAction);
+    QVERIFY(saveAction);
+
+    // Before: the ordinary editor, everything reachable.
+    QVERIFY(newAction->isEnabled());
+    QVERIFY(openAction->isEnabled());
+    QVERIFY(window.acceptDrops());
+
+    window.setEditOnly(true);
+
+    // Every way of ending up in a different document is gone ...
+    QVERIFY(! newAction->isVisible());
+    QVERIFY(! newAction->isEnabled());
+    QVERIFY(! openAction->isVisible());
+    QVERIFY(! openAction->isEnabled());
+    QVERIFY(! window.acceptDrops());
+
+    // ... while editing and saving the bound document is untouched.
+    QVERIFY(saveAction->isEnabled());
+    QVERIFY(saveAction->isVisible());
 }
 
 #include "tst_mainwindow.moc"
