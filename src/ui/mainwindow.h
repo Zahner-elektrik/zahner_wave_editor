@@ -18,16 +18,24 @@ class QMenu;
 class QProgressBar;
 class QUndoStack;
 class QSpinBox;
+class QStackedWidget;
 
 class QLocalServer;
 
 namespace zwe {
+
+namespace spectrum {
+struct Analysis;
+}
 
 class CanvasWidget;
 class GridBar;
 class HelpBrowser;
 class LicenseViewerDialog;
 class PropertyPanel;
+class SpectrumAnalyzer;
+class SpectrumPanel;
+class SpectrumWidget;
 class StructurePanel;
 
 class MainWindow : public QMainWindow {
@@ -116,6 +124,17 @@ private:
     void addRecentFile(const QString& filePath);
     QStringList recentFiles() const;
     void writeSettings() const;
+    // The spectrum below the waveform. Only computed while it is shown; hiding
+    // it drops any analysis still running and gives the sidebar back to the
+    // property panel.
+    void setSpectrumVisible(bool visible);
+    // Asks for a new analysis of the current document with the settings of the
+    // spectrum's sidebar page, if the spectrum is shown.
+    void requestSpectrum();
+    void showSpectrumAnalysis(const spectrum::Analysis& analysis);
+    // Which page the right-hand dock shows: the spectrum's settings and figures
+    // once the spectrum is clicked, the properties of the selection otherwise.
+    void showSpectrumSettings(bool spectrum);
     // Applies darkTheme_/blueAccent_ to the palette and re-tints the icons.
     // The values themselves are persisted by SettingsDialog.
     void applyTheme();
@@ -135,6 +154,19 @@ private:
     QLabel* cursorReadout_          = nullptr;
     QProgressBar* recalcProgress_   = nullptr;
     QSpinBox* sampleRateSpin_       = nullptr;
+    SpectrumWidget* spectrumWidget_     = nullptr;
+    SpectrumPanel* spectrumPanel_       = nullptr;
+    SpectrumAnalyzer* spectrumAnalyzer_ = nullptr;
+    QStackedWidget* sidebarPages_       = nullptr;
+    QAction* spectrumAction_            = nullptr;
+    // Set whenever the spectrum's frequency range may have changed - a new
+    // document, another analysis rate - so the next result is fitted instead of
+    // keeping a zoom that may show nothing of it.
+    bool spectrumNeedsFit_ = true;
+    // Whether the sidebar page shows figures yet. Until the first result it says
+    // that they are being calculated; afterwards the old figures stay up while
+    // an edit is analyzed, instead of flickering on every mouse move.
+    bool spectrumShown_ = false;
     LayerPath selectedLayerPath_;
     std::optional<size_t> selectedSegmentIndex_;
     QMenu* recentFilesMenu_       = nullptr;

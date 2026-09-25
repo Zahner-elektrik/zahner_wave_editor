@@ -19,6 +19,7 @@
         <file alias="toolbar/move-up.svg">icons/toolbar/move-up.svg</file>
         <file alias="toolbar/move-down.svg">icons/toolbar/move-down.svg</file>
         <file alias="toolbar/fit-waveform.svg">icons/toolbar/fit-waveform.svg</file>
+        <file alias="toolbar/spectrum.svg">icons/toolbar/spectrum.svg</file>
         <file alias="toolbar/dark-theme.svg">icons/toolbar/dark-theme.svg</file>
         <file alias="toolbar/wave-dc.svg">icons/toolbar/wave-dc.svg</file>
         <file alias="toolbar/wave-ramp.svg">icons/toolbar/wave-ramp.svg</file>

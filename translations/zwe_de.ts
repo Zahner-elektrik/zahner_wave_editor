@@ -4,7 +4,7 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../src/app/main.cpp" line="+26"/>
+        <location filename="../src/app/main.cpp" line="+27"/>
         <source>Waveform editor for Zahner Lab wave jobs</source>
         <translation>Wellenform-Editor für Zahner-Lab-Wellenformaufträge</translation>
     </message>
@@ -13,16 +13,26 @@
         <source>A .zwj waveform document to open.</source>
         <translation>Ein zu öffnendes .zwj-Wellenformdokument.</translation>
     </message>
+    <message>
+        <location line="+9"/>
+        <source>Edit only the given document: no new, open, save as or recent files.</source>
+        <translation>Nur das angegebene Dokument bearbeiten: kein Neu, Öffnen, Speichern unter oder zuletzt verwendete Dateien.</translation>
+    </message>
+    <message>
+        <location line="+12"/>
+        <source>--edit-only needs the document to edit as an argument.</source>
+        <translation>--edit-only benötigt das zu bearbeitende Dokument als Argument.</translation>
+    </message>
 </context>
 <context>
     <name>zwe::CanvasWidget</name>
     <message>
-        <location filename="../src/ui/canvaswidget.cpp" line="+565"/>
+        <location filename="../src/ui/canvaswidget.cpp" line="+598"/>
         <source>Time / Value</source>
         <translation>Zeit / Wert</translation>
     </message>
     <message>
-        <location line="+907"/>
+        <location line="+922"/>
         <source>Result</source>
         <translation>Ergebnis</translation>
     </message>
@@ -370,7 +380,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
 <context>
     <name>zwe::MainWindow</name>
     <message>
-        <location filename="../src/ui/mainwindow.cpp" line="+273"/>
+        <location filename="../src/ui/mainwindow.cpp" line="+299"/>
         <source>Structure</source>
         <translation>Struktur</translation>
     </message>
@@ -380,7 +390,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Eigenschaften</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+25"/>
         <source>&amp;File</source>
         <translation>&amp;Datei</translation>
     </message>
@@ -390,12 +400,12 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>&amp;Neu</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Open...</source>
         <translation>Ö&amp;ffnen...</translation>
     </message>
     <message>
-        <location line="+5"/>
+        <location line="+6"/>
         <source>&amp;Save</source>
         <translation>&amp;Speichern</translation>
     </message>
@@ -405,7 +415,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Speichern &amp;unter...</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+4"/>
         <source>Recent &amp;Files</source>
         <translation>&amp;Zuletzt verwendete Dateien</translation>
     </message>
@@ -448,7 +458,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation type="vanished">&amp;Dunkles Design</translation>
     </message>
     <message>
-        <location line="+28"/>
+        <location line="+33"/>
         <source>&amp;Help</source>
         <translation>&amp;Hilfe</translation>
     </message>
@@ -462,12 +472,12 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation type="vanished">Datei</translation>
     </message>
     <message>
-        <location line="+102"/>
+        <location line="+106"/>
         <source>t = %1 s, value = %2</source>
         <translation>t = %1 s, Wert = %2</translation>
     </message>
     <message>
-        <location line="+781"/>
+        <location line="+973"/>
         <source>Layer %1</source>
         <translation>Ebene %1</translation>
     </message>
@@ -477,7 +487,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Ebene hinzufügen</translation>
     </message>
     <message>
-        <location line="-730"/>
+        <location line="-881"/>
         <source>Remove Layer</source>
         <translation>Ebene entfernen</translation>
     </message>
@@ -492,13 +502,13 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Ebene duplizieren</translation>
     </message>
     <message>
-        <location line="-268"/>
-        <location line="+1028"/>
+        <location line="-318"/>
+        <location line="+1229"/>
         <source>Add Segment</source>
         <translation>Segment hinzufügen</translation>
     </message>
     <message>
-        <location line="-1117"/>
+        <location line="-1318"/>
         <source>Export &amp;Waveform...</source>
         <translation>&amp;Wellenform exportieren...</translation>
     </message>
@@ -690,7 +700,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation type="vanished">Zahner-Blau</translation>
     </message>
     <message>
-        <location line="+11"/>
+        <location line="+16"/>
         <source>&amp;Help Contents</source>
         <translation>&amp;Hilfeinhalt</translation>
     </message>
@@ -710,7 +720,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Wellenform-Werkzeuge</translation>
     </message>
     <message>
-        <location line="+24"/>
+        <location line="+25"/>
         <source>Value rate</source>
         <translation>Value Rate</translation>
     </message>
@@ -808,13 +818,13 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation type="vanished">Dunkles Farbschema verwenden</translation>
     </message>
     <message>
-        <location line="+140"/>
-        <location line="+788"/>
+        <location line="+184"/>
+        <location line="+939"/>
         <source>Remove Segment</source>
         <translation>Segment entfernen</translation>
     </message>
     <message>
-        <location line="-769"/>
+        <location line="-920"/>
         <source>Duplicate Segment</source>
         <translation>Segment duplizieren</translation>
     </message>
@@ -843,12 +853,12 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <location line="+4"/>
         <location line="+9"/>
         <location line="+4"/>
-        <location line="+51"/>
+        <location line="+119"/>
         <source>Open Document</source>
         <translation>Dokument öffnen</translation>
     </message>
     <message>
-        <location line="-68"/>
+        <location line="-136"/>
         <source>The selected file does not exist.</source>
         <translation>Die ausgewählte Datei ist nicht vorhanden.</translation>
     </message>
@@ -869,14 +879,14 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
     </message>
     <message>
         <location line="-46"/>
-        <location line="+80"/>
+        <location line="+148"/>
         <location line="+55"/>
-        <location line="+617"/>
+        <location line="+700"/>
         <source>Untitled</source>
         <translation>Unbenannt</translation>
     </message>
     <message>
-        <location line="-999"/>
+        <location line="-1194"/>
         <source>Export waveform values as CSV or binary doubles</source>
         <translation>Wellenformwerte als CSV oder als binäre Doubles exportieren</translation>
     </message>
@@ -886,7 +896,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Eine Gruppe hinzufügen, deren Ebenen zuerst untereinander verrechnet werden</translation>
     </message>
     <message>
-        <location line="+9"/>
+        <location line="+12"/>
         <source>Change the application settings</source>
         <translation>Anwendungseinstellungen ändern</translation>
     </message>
@@ -896,7 +906,12 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Neuberechnung… %p%</translation>
     </message>
     <message>
-        <location line="+75"/>
+        <location line="+28"/>
+        <source>f = %1 Hz, amplitude = %2</source>
+        <translation>f = %1 Hz, Amplitude = %2</translation>
+    </message>
+    <message>
+        <location line="+88"/>
         <source>Remove Group</source>
         <translation>Gruppe entfernen</translation>
     </message>
@@ -907,7 +922,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
     </message>
     <message>
         <location line="+126"/>
-        <location line="+80"/>
+        <location line="+148"/>
         <source>Layer 1</source>
         <translation>Layer 1</translation>
     </message>
@@ -977,12 +992,12 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Gesamte Wellenform skalieren</translation>
     </message>
     <message>
-        <location line="-746"/>
+        <location line="-864"/>
         <source>Scale Entire Waveform...</source>
         <translation>Gesamte Wellenform skalieren...</translation>
     </message>
     <message>
-        <location line="+705"/>
+        <location line="+823"/>
         <source>Scale all layers and segments at once. The document Value Rate is not changed.</source>
         <translation>Skaliert alle Ebenen und Segmente auf einmal. Die Value Rate des Dokuments wird nicht geändert.</translation>
     </message>
@@ -1012,7 +1027,21 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>%1 exportiert</translation>
     </message>
     <message>
-        <location line="-7"/>
+        <location line="-680"/>
+        <source>Show &amp;Spectrum (FFT)</source>
+        <translation>&amp;Spektrum (FFT) anzeigen</translation>
+    </message>
+    <message>
+        <location line="+105"/>
+        <source>Show the spectrum (FFT) and the statistics of the waveform below it</source>
+        <translation>Das Spektrum (FFT) und die Statistik der Wellenform darunter anzeigen</translation>
+    </message>
+    <message>
+        <source>f = %1 Hz, amplitude = %2 V</source>
+        <translation type="vanished">f = %1 Hz, Amplitude = %2 V</translation>
+    </message>
+    <message>
+        <location line="+568"/>
         <source>Export Waveform</source>
         <translation>Wellenform exportieren</translation>
     </message>
@@ -1022,7 +1051,7 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
         <translation>Über Zahner Wave Editor</translation>
     </message>
     <message>
-        <location line="+1"/>
+        <location line="+3"/>
         <source>Zahner Wave Editor %1
 
 A waveform editor for Zahner Lab wave jobs.</source>
@@ -1031,7 +1060,7 @@ A waveform editor for Zahner Lab wave jobs.</source>
 Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
     </message>
     <message>
-        <location line="+48"/>
+        <location line="+49"/>
         <source>Settings</source>
         <translation>Einstellungen</translation>
     </message>
@@ -1051,7 +1080,7 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Das aktuelle Dokument enthält ungespeicherte Änderungen. Möchten Sie sie speichern?</translation>
     </message>
     <message>
-        <location line="+106"/>
+        <location line="+114"/>
         <source>Edit Segment</source>
         <translation>Segment bearbeiten</translation>
     </message>
@@ -1066,7 +1095,27 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Ebene bearbeiten</translation>
     </message>
     <message>
-        <location line="+72"/>
+        <location line="+75"/>
+        <source>Calculating the spectrum…</source>
+        <translation>Spektrum wird berechnet…</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Calculating…</source>
+        <translation>Wird berechnet…</translation>
+    </message>
+    <message>
+        <location line="+23"/>
+        <source>At this sample rate the waveform has %L1 samples, more than the %L2 a spectrum is calculated for. Lower the sample rate of the spectrum.</source>
+        <translation>Bei dieser Abtastrate hat die Wellenform %L1 Abtastwerte, mehr als die %L2, für die ein Spektrum berechnet wird. Verringern Sie die Abtastrate des Spektrums.</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>There is no waveform to analyze.</source>
+        <translation>Es gibt keine Wellenform zu analysieren.</translation>
+    </message>
+    <message>
+        <location line="+41"/>
         <source>Group %1</source>
         <translation>Gruppe %1</translation>
     </message>
@@ -1106,12 +1155,12 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Segment verschieben</translation>
     </message>
     <message>
-        <location line="+74"/>
+        <location line="+76"/>
         <source>%1%2 - Zahner Wave Editor %3</source>
         <translation>%1%2 - Zahner Wave Editor %3</translation>
     </message>
     <message>
-        <location line="+8"/>
+        <location line="+12"/>
         <source>No recent files</source>
         <translation>Keine zuletzt verwendeten Dateien</translation>
     </message>
@@ -1150,12 +1199,12 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
     </message>
     <message>
         <location line="+2"/>
-        <location line="+449"/>
+        <location line="+448"/>
         <source>Exponential</source>
         <translation>Exponential</translation>
     </message>
     <message>
-        <location line="-447"/>
+        <location line="-446"/>
         <source>Formula</source>
         <translation>Formel</translation>
     </message>
@@ -1191,53 +1240,53 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation type="vanished">Wählen Sie ein Segment aus, um seine Eigenschaften zu bearbeiten.</translation>
     </message>
     <message>
-        <location line="+145"/>
-        <location line="+551"/>
+        <location line="+144"/>
+        <location line="+586"/>
         <source>Type</source>
         <translation>Typ</translation>
     </message>
     <message>
-        <location line="-549"/>
-        <location line="+615"/>
+        <location line="-584"/>
+        <location line="+650"/>
         <source>Duration (s)</source>
         <translation>Dauer (s)</translation>
     </message>
     <message>
-        <location line="-598"/>
+        <location line="-633"/>
         <source>Repeat</source>
         <translation>Wiederholungen</translation>
     </message>
     <message>
         <location line="+6"/>
-        <location line="+637"/>
+        <location line="+672"/>
         <source>Value</source>
         <translation>Wert</translation>
     </message>
     <message>
-        <location line="-632"/>
+        <location line="-667"/>
         <location line="+127"/>
-        <location line="+274"/>
+        <location line="+297"/>
         <source>Start value</source>
         <translation>Startwert</translation>
     </message>
     <message>
-        <location line="-394"/>
+        <location line="-417"/>
         <location line="+127"/>
-        <location line="+274"/>
+        <location line="+298"/>
         <source>End value</source>
         <translation>Endwert</translation>
     </message>
     <message>
-        <location line="-391"/>
+        <location line="-415"/>
         <location line="+207"/>
         <location line="+65"/>
         <location line="+35"/>
-        <location line="+114"/>
+        <location line="+139"/>
         <source>Amplitude</source>
         <translation>Amplitude</translation>
     </message>
     <message>
-        <location line="-404"/>
+        <location line="-429"/>
         <source>Frequency (Hz)</source>
         <translation>Frequenz (Hz)</translation>
     </message>
@@ -1267,17 +1316,18 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
     </message>
     <message>
         <location line="+11"/>
+        <location line="+309"/>
         <source>Base value</source>
         <translation>Basiswert</translation>
     </message>
     <message>
-        <location line="+7"/>
-        <location line="+318"/>
+        <location line="-302"/>
+        <location line="+343"/>
         <source>Pulse value</source>
         <translation>Impulswert</translation>
     </message>
     <message>
-        <location line="-312"/>
+        <location line="-337"/>
         <source>Delay (s)</source>
         <translation>Verzögerung (s)</translation>
     </message>
@@ -1358,7 +1408,7 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Abfall (s)</translation>
     </message>
     <message>
-        <location line="+36"/>
+        <location line="+61"/>
         <source>Step value</source>
         <translation>Schrittwert</translation>
     </message>
@@ -1388,28 +1438,32 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Den Impuls gegen die Scanrichtung schicken statt mit ihr</translation>
     </message>
     <message>
-        <location line="+20"/>
+        <location line="+29"/>
         <source>|End value - start value| divided by the step value, rounded down. The duration above is kept at this many steps.</source>
         <translation>|Endwert - Startwert| geteilt durch den Schrittwert, abgerundet. Die Dauer oben wird auf genau so viele Schritte gehalten.</translation>
     </message>
     <message>
+        <location line="-6"/>
         <source>|End value - start value| divided by the step value, rounded down. One pulse more than that is sent - the first and the last one are both counted - and the duration above is kept at that many steps.</source>
         <translation>|Endwert - Startwert| geteilt durch den Schrittwert, abgerundet. Gesendet wird ein Impuls mehr - der erste und der letzte zählen beide mit -, und die Dauer oben wird auf genau so viele Schritte gehalten.</translation>
     </message>
     <message>
+        <location line="-120"/>
         <source>The level the waveform holds between the pulses</source>
         <translation>Der Wert, den die Wellenform zwischen den Impulsen hält</translation>
     </message>
     <message>
+        <location line="+3"/>
         <source>The first pulse of the sweep, the one every following pulse steps on from</source>
         <translation>Der erste Impuls des Sweeps, von dem aus jeder folgende einen Schritt weiter steht</translation>
     </message>
     <message>
+        <location line="+2"/>
         <source>The last pulse of the sweep</source>
         <translation>Der letzte Impuls des Sweeps</translation>
     </message>
     <message>
-        <location line="+3"/>
+        <location line="+125"/>
         <source>Steps</source>
         <translation>Schritte</translation>
     </message>
@@ -1528,12 +1582,12 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Den ausgewählten Punkt entfernen</translation>
     </message>
     <message>
-        <location line="-442"/>
+        <location line="-477"/>
         <source>Start frequency (Hz)</source>
         <translation>Startfrequenz (Hz)</translation>
     </message>
     <message>
-        <location line="-404"/>
+        <location line="-403"/>
         <source>Window</source>
         <translation>Fenster</translation>
     </message>
@@ -1553,7 +1607,7 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <translation>Square Wave Voltammetry</translation>
     </message>
     <message>
-        <location line="+43"/>
+        <location line="+42"/>
         <source>Rectangular</source>
         <translation>Rechteck</translation>
     </message>
@@ -1679,6 +1733,334 @@ Ein Wellenform-Editor für Zahner-Lab-Wellenformaufträge.</translation>
         <location line="+1"/>
         <source>Accent color</source>
         <translation>Akzentfarbe</translation>
+    </message>
+</context>
+<context>
+    <name>zwe::SpectrumPanel</name>
+    <message>
+        <location filename="../src/ui/spectrumpanel.cpp" line="+92"/>
+        <source>Spectrum (FFT)</source>
+        <translation>Spektrum (FFT)</translation>
+    </message>
+    <message>
+        <source>= value rate</source>
+        <translation type="vanished">= Value Rate</translation>
+    </message>
+    <message>
+        <source>Set the sample rate back to the value rate, and follow the value rate again when it changes</source>
+        <translation type="vanished">Die Abtastrate auf die Value Rate zurücksetzen und ihr bei Änderungen wieder folgen</translation>
+    </message>
+    <message>
+        <location line="+8"/>
+        <source>Sample rate (1/s)</source>
+        <translation>Abtastrate (1/s)</translation>
+    </message>
+    <message>
+        <source>The rate at which the output is sampled for the FFT. The output holds every value until the next one, so it is a staircase; at the value rate the spectrum shows the values themselves, while a multiple of the value rate also reveals the images of the held output around multiples of the value rate. Follows the value rate until you enter a rate of your own.</source>
+        <translation type="vanished">Die Rate, mit der der Ausgang für die FFT abgetastet wird. Der Ausgang hält jeden Wert bis zum nächsten, ist also eine Treppe; bei der Value Rate zeigt das Spektrum die Werte selbst, ein Vielfaches der Value Rate zeigt zusätzlich die Spiegelbilder des gehaltenen Ausgangs um Vielfache der Value Rate. Folgt der Value Rate, bis Sie eine eigene Rate eintragen.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The rate at which the output is sampled for the FFT. The output holds every value until the next one, so it is a staircase; at the value rate the spectrum shows the values themselves, while a multiple of the value rate also reveals the images of the held output around multiples of the value rate. Follows the value rate until you enter a rate of your own, and again once you enter the value rate itself.</source>
+        <translation>Die Rate, mit der der Ausgang für die FFT abgetastet wird. Der Ausgang hält jeden Wert bis zum nächsten, ist also eine Treppe; bei der Value Rate zeigt das Spektrum die Werte selbst, ein Vielfaches der Value Rate zeigt zusätzlich die Spiegelbilder des gehaltenen Ausgangs um Vielfache der Value Rate. Folgt der Value Rate, bis Sie eine eigene Rate eintragen, und wieder, sobald Sie die Value Rate selbst eintragen.</translation>
+    </message>
+    <message>
+        <location line="+24"/>
+        <source>Rectangular</source>
+        <translation>Rechteck</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>No window. Exact for a signal that is periodic in the analyzed stretch; anything else leaks into wide skirts around every peak.</source>
+        <translation>Kein Fenster. Exakt für ein Signal, das im analysierten Abschnitt periodisch ist; alles andere läuft in breiten Flanken um jede Spitze aus.</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Hann</source>
+        <translation>Hann</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>A good general-purpose compromise between peak width and leakage.</source>
+        <translation>Ein guter Kompromiss für alle Zwecke zwischen Spitzenbreite und Leckeffekt.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Flat top</source>
+        <translation>Flat-Top</translation>
+    </message>
+    <message>
+        <location line="+0"/>
+        <source>The most accurate amplitudes, at the cost of the widest peaks.</source>
+        <translation>Die genauesten Amplituden, um den Preis der breitesten Spitzen.</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Blackman-Harris</source>
+        <translation>Blackman-Harris</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>The lowest leakage, for finding small components next to large ones.</source>
+        <translation>Der geringste Leckeffekt, um kleine Anteile neben großen zu finden.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Window</source>
+        <translation>Fenster</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The weighting applied to the analyzed stretch before the FFT. It trades the width of a peak against how much of it leaks into its neighbors.</source>
+        <translation>Die Gewichtung des analysierten Abschnitts vor der FFT. Sie wägt die Breite einer Spitze dagegen ab, wie viel von ihr in die Nachbarn ausläuft.</translation>
+    </message>
+    <message>
+        <location line="+7"/>
+        <source>Logarithmic frequency axis</source>
+        <translation>Logarithmische Frequenzachse</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Give every decade of frequency the same width</source>
+        <translation>Jeder Frequenzdekade dieselbe Breite geben</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Logarithmic amplitude axis</source>
+        <translation>Logarithmische Amplitudenachse</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Show small components next to large ones - harmonics, images and noise are usually decades below the fundamental</source>
+        <translation>Kleine Anteile neben großen zeigen - Oberschwingungen, Spiegelbilder und Rauschen liegen meist Dekaden unter der Grundschwingung</translation>
+    </message>
+    <message>
+        <location line="+11"/>
+        <source>Statistics</source>
+        <translation>Statistik</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Copy</source>
+        <translation>Kopieren</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Copy all figures to the clipboard, one name and value per line separated by a tab, ready to paste into a spreadsheet</source>
+        <translation>Alle Kennwerte in die Zwischenablage kopieren, je Zeile Name und Wert durch einen Tabulator getrennt, bereit zum Einfügen in eine Tabellenkalkulation</translation>
+    </message>
+    <message>
+        <location line="+9"/>
+        <source>Levels carry no unit: they are volts or amperes, depending on whether the waveform is output as a voltage or as a current. The slew rate is then in V/s or A/s.</source>
+        <translation>Pegel haben keine Einheit: Sie sind Volt oder Ampere, je nachdem, ob die Wellenform als Spannung oder als Strom ausgegeben wird. Die Anstiegsrate ist dann entsprechend in V/s oder A/s.</translation>
+    </message>
+    <message>
+        <location line="+55"/>
+        <source>Signal</source>
+        <translation>Signal</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Samples</source>
+        <translation>Abtastwerte</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>How many samples of the output the FFT was computed from</source>
+        <translation>Aus wie vielen Abtastwerten des Ausgangs die FFT berechnet wurde</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Analysis rate</source>
+        <translation>Analyserate</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Duration</source>
+        <translation>Dauer</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The analyzed stretch of the output: the samples divided by the analysis rate</source>
+        <translation>Der analysierte Abschnitt des Ausgangs: die Abtastwerte geteilt durch die Analyserate</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Time domain</source>
+        <translation>Zeitbereich</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>DC (mean)</source>
+        <translation>DC (Mittelwert)</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>RMS</source>
+        <translation>Effektivwert</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>AC RMS</source>
+        <translation>AC-Effektivwert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The RMS without the DC part: what an AC coupled meter would read</source>
+        <translation>Der Effektivwert ohne Gleichanteil: was ein AC-gekoppeltes Messgerät anzeigen würde</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Minimum</source>
+        <translation>Minimum</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>Maximum</source>
+        <translation>Maximum</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Peak</source>
+        <translation>Spitzenwert</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The largest magnitude of the output, of either sign</source>
+        <translation>Der größte Betrag des Ausgangs, gleich welchen Vorzeichens</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Peak-to-peak</source>
+        <translation>Spitze-Spitze</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Crest factor</source>
+        <translation>Crest-Faktor</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Peak divided by RMS - 1.414 for a sine, 1 for a square wave</source>
+        <translation>Spitzenwert geteilt durch Effektivwert - 1,414 für einen Sinus, 1 für ein Rechteck</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Form factor</source>
+        <translation>Formfaktor</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>RMS divided by the mean magnitude - 1.111 for a sine, 1 for a square wave</source>
+        <translation>Effektivwert geteilt durch den Gleichrichtwert - 1,111 für einen Sinus, 1 für ein Rechteck</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Max. step</source>
+        <translation>Max. Sprung</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The largest jump between two consecutive output values</source>
+        <translation>Der größte Sprung zwischen zwei aufeinanderfolgenden Ausgangswerten</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Max. slew rate</source>
+        <translation>Max. Anstiegsrate</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The largest jump per value period - the slew rate the output stage has to manage</source>
+        <translation>Der größte Sprung je Wertperiode - die Anstiegsrate, die die Ausgangsstufe schaffen muss</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Spectrum</source>
+        <translation>Spektrum</translation>
+    </message>
+    <message>
+        <location line="+3"/>
+        <source>Resolution Δf</source>
+        <translation>Auflösung Δf</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The spacing of the spectral lines: the analysis rate divided by the samples, or one over the duration</source>
+        <translation>Der Abstand der Spektrallinien: die Analyserate geteilt durch die Abtastwerte, oder eins durch die Dauer</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Nyquist frequency</source>
+        <translation>Nyquist-Frequenz</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Half the analysis rate, the highest frequency the spectrum can show</source>
+        <translation>Die halbe Analyserate, die höchste Frequenz, die das Spektrum zeigen kann</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Fundamental</source>
+        <translation>Grundschwingung</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The frequency of the strongest spectral line above DC</source>
+        <translation>Die Frequenz der stärksten Spektrallinie oberhalb von DC</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>Fundamental amplitude</source>
+        <translation>Amplitude der Grundschwingung</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The peak amplitude of the fundamental</source>
+        <translation>Die Scheitelamplitude der Grundschwingung</translation>
+    </message>
+    <message>
+        <location line="+4"/>
+        <source>THD</source>
+        <translation>THD</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>Total harmonic distortion: the RMS of the harmonics of the fundamental relative to the fundamental itself</source>
+        <translation>Klirrfaktor: der Effektivwert der Oberschwingungen der Grundschwingung bezogen auf die Grundschwingung selbst</translation>
+    </message>
+    <message>
+        <location line="+5"/>
+        <source>Power near Nyquist</source>
+        <translation>Leistung nahe Nyquist</translation>
+    </message>
+    <message>
+        <location line="+2"/>
+        <source>The share of the AC power in the top tenth of the spectrum below the Nyquist frequency. A signal sampled fast enough has next to nothing there.</source>
+        <translation>Der Anteil der AC-Leistung im obersten Zehntel des Spektrums unterhalb der Nyquist-Frequenz. Ein ausreichend schnell abgetastetes Signal hat dort so gut wie nichts.</translation>
+    </message>
+    <message>
+        <location line="+124"/>
+        <source>value rate</source>
+        <translation>Value Rate</translation>
+    </message>
+    <message>
+        <location line="+1"/>
+        <source>%1 × value rate</source>
+        <translation>%1 × Value Rate</translation>
+    </message>
+    <message>
+        <location line="+21"/>
+        <source>%1 of the AC power lies close to the Nyquist frequency. The sample rate may be too low: parts of the signal above it are folded back into the spectrum (aliasing).</source>
+        <translation>%1 der AC-Leistung liegen nahe der Nyquist-Frequenz. Die Abtastrate ist womöglich zu niedrig: Anteile des Signals darüber werden ins Spektrum zurückgefaltet (Aliasing).</translation>
+    </message>
+</context>
+<context>
+    <name>zwe::SpectrumWidget</name>
+    <message>
+        <location filename="../src/ui/spectrumwidget.cpp" line="+526"/>
+        <source>Frequency / Amplitude</source>
+        <translation>Frequenz / Amplitude</translation>
     </message>
 </context>
 <context>

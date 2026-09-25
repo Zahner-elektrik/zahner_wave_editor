@@ -26,10 +26,18 @@ add_library(waveui STATIC
     licenseviewerdialog.h
     mainwindow.cpp
     mainwindow.h
+    plotscale.cpp
+    plotscale.h
     propertypanel.cpp
     propertypanel.h
     settingsdialog.cpp
     settingsdialog.h
+    spectrumanalyzer.cpp
+    spectrumanalyzer.h
+    spectrumpanel.cpp
+    spectrumpanel.h
+    spectrumwidget.cpp
+    spectrumwidget.h
     structurepanel.cpp
     structurepanel.h
     theme.cpp

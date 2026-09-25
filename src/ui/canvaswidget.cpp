@@ -11,6 +11,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPainterPath>
+#include <QPolygonF>
 #include <QPalette>
 #include <QResizeEvent>
 #include <QStringList>
@@ -20,6 +21,7 @@
 #include <limits>
 
 #include "core/sampling.h"
+#include "plotscale.h"
 #include "theme.h"
 
 // Performance tracing, disabled by default. Enable with the environment
@@ -44,37 +46,11 @@ constexpr double PointHitRadius  = 8.0;
 constexpr double CurveHitRadius    = 18.0;
 constexpr double BoundaryHitRadius = 7.0;
 
-double niceStep(double span, int desiredTicks) {
-    if (! (span > 0.0) || desiredTicks <= 0) {
-        return 1.0;
-    }
-
-    const double base       = std::pow(10.0, std::floor(std::log10(span / desiredTicks)));
-    const double normalized = (span / desiredTicks) / base;
-    const double factor     = normalized <= 1.0   ? 1.0
-                              : normalized <= 2.0 ? 2.0
-                              : normalized <= 5.0 ? 5.0
-                                                  : 10.0;
-    return factor * base;
-}
-
-QString siLabel(double value, const QString& unit) {
-    if (std::abs(value) < std::numeric_limits<double>::epsilon()) {
-        return QStringLiteral("0 %1").arg(unit);
-    }
-
-    static constexpr const char* Prefixes[] = {"f", "p", "n", "µ", "m", "", "k", "M", "G"};
-    const int exponent =
-        std::clamp(static_cast<int>(std::floor(std::log10(std::abs(value)) / 3.0)) * 3, -15, 9);
-    const double scaled = value / std::pow(10.0, exponent);
-    return QString::number(scaled, 'g', 3) + QLatin1Char(' ') +
-           QString::fromUtf8(Prefixes[(exponent + 15) / 3]) + unit;
-}
-
-QColor translucent(QColor color, int alpha) {
-    color.setAlpha(alpha);
-    return color;
-}
+// The scale helpers are shared with the spectrum plot, which labels its axes
+// the same way.
+using plotscale::niceStep;
+using plotscale::siLabel;
+using plotscale::translucent;
 
 // The nearest multiple of step. A step of zero means "do not snap this axis",
 // which is what an empty fixed step in the grid bar amounts to.
@@ -316,8 +292,10 @@ void CanvasWidget::notifySnapStep() {
 
 void CanvasWidget::rebuildDisplaySamples() {
     const QRect area      = plotRect();
-    const double duration = documentDuration(document_);
-    if (! (duration > 0.0) || ! (document_.sampleRate > 0.0) || area.width() <= 0) {
+    const double rate     = document_.sampleRate;
+    const size_t total    = sampling::sampleCount(document_);
+    const double viewSpan = view_.xMax - view_.xMin;
+    if (total == 0 || ! (rate > 0.0) || area.width() <= 0 || ! (viewSpan > 0.0)) {
         displayStart_ = 0.0;
         displayRate_  = 0.0;
         totalSamples_.clear();
@@ -326,42 +304,40 @@ void CanvasWidget::rebuildDisplaySamples() {
         return;
     }
 
-    // Sample only the visible time window (clamped to the document), which
-    // bounds a rebuild to the plot's pixel width regardless of document
-    // length, sample rate or zoom level.
-    //
-    // The window is divided into buckets of two per pixel. When the document
-    // rate exceeds the bucket rate, one sample per bucket would alias: a
-    // 100 kHz sine whose period is commensurate with the bucket grid can land
-    // every sample on a zero crossing, making the curve vanish. Each bucket is
-    // therefore reduced to a [min, max] pair over a dense sub-grid (up to 64
-    // sub-samples per bucket), stored interleaved at
-    // displayRate_ = 2 * bucketRate so the paint code needs no changes.
-    const double visibleStart         = std::clamp(view_.xMin, 0.0, duration);
-    const double visibleEnd           = std::clamp(view_.xMax, 0.0, duration);
-    const double visibleDuration      = std::max(visibleEnd - visibleStart, duration / 1e9);
-    const double bucketRate           = 2.0 * static_cast<double>(area.width()) / visibleDuration;
-    displayStart_                     = visibleStart;
+    // The plot shows what an export writes: value k is output at k / rate and
+    // held until the next one takes over, so only the document's own sample
+    // grid is evaluated - never a time in between that no export contains -
+    // and paintEvent() draws each value as a step. Only the values whose hold
+    // interval reaches into the visible window are sampled, which bounds a
+    // rebuild to the plot's pixel width regardless of document length, value
+    // rate or zoom level.
+    const double lastIndex = static_cast<double>(total - 1);
+    const auto first =
+        static_cast<size_t>(std::clamp(std::floor(view_.xMin * rate), 0.0, lastIndex));
+    const auto last =
+        static_cast<size_t>(std::clamp(std::floor(view_.xMax * rate), 0.0, lastIndex));
+    const size_t count = last - first + 1;
+    displayStart_      = static_cast<double>(first) / rate;
 
+    // Zoomed out, far more values fall into a pixel column than can be drawn.
+    // The window is then divided into buckets of two per pixel, each reduced to
+    // the [min, max] pair of its values and stored interleaved at
+    // displayRate_ = 2 * rate / bucketSize, which the paint code draws as one
+    // vertical line per column. A bucket of more than MaxSubsPerBucket values
+    // is represented by every stride-th of them: a subset of the grid, so the
+    // envelope still only shows values the export actually contains.
     constexpr size_t MaxSubsPerBucket = 64;
-    const size_t subsPerBucket =
-        document_.sampleRate > bucketRate
-            ? std::min(
-                  MaxSubsPerBucket,
-                  static_cast<size_t>(std::ceil(document_.sampleRate / bucketRate))
-              )
-            : 1;
-    const double subRate =
-        subsPerBucket > 1 ? bucketRate * static_cast<double>(subsPerBucket) : document_.sampleRate;
-    // Even the sub-grid undersamples the document; jitter each chunk's phase
-    // so a signal commensurate with the sub-grid cannot stay locked onto its
-    // own zero crossings across the whole window.
-    const bool jitter        = subsPerBucket > 1 && document_.sampleRate > subRate;
-
-    const size_t bucketCount = static_cast<size_t>(std::ceil(visibleDuration * bucketRate)) + 1;
-    const size_t subCount    = subsPerBucket > 1
-                                   ? bucketCount * subsPerBucket
-                                   : static_cast<size_t>(std::ceil(visibleDuration * subRate)) + 1;
+    const double valuesPerBucket      = rate * viewSpan / (2.0 * area.width());
+    size_t stride                     = 1;
+    size_t subsPerBucket              = 1;
+    if (valuesPerBucket > 1.0) {
+        stride = static_cast<size_t>(std::ceil(valuesPerBucket / MaxSubsPerBucket));
+        subsPerBucket =
+            static_cast<size_t>(std::ceil(valuesPerBucket / static_cast<double>(stride)));
+    }
+    const size_t bucketSize = stride * subsPerBucket;
+    const double subRate    = rate / static_cast<double>(stride);
+    const size_t subCount   = (count + stride - 1) / stride;
 
     // Sampled in chunks so a slow rebuild (e.g. an expensive formula) can
     // report progress while it runs. The first report waits 200 ms so
@@ -377,19 +353,25 @@ void CanvasWidget::rebuildDisplaySamples() {
     }
     // The total comes out of the same pass as the individual curves: with
     // multiplying layers and groups it can no longer be derived from them
-    // afterwards, and it has to be combined at sub-grid resolution, before any
-    // min/max reduction, because the envelope of a combination is not the
-    // combination of the envelopes.
+    // afterwards, and it has to be combined per value, before any min/max
+    // reduction, because the envelope of a combination is not the combination
+    // of the envelopes.
     std::vector<double> totalSubs;
     totalSubs.reserve(subCount);
     constexpr size_t ChunkSize = 4096;
     for (size_t chunkStart = 0; chunkStart < subCount; chunkStart += ChunkSize) {
-        const size_t chunkCount = std::min(ChunkSize, subCount - chunkStart);
+        // A subset of the grid can lock onto a signal commensurate with it and,
+        // say, land every value on a zero crossing, making the curve vanish.
+        // Each chunk therefore starts at its own offset into the stride.
         const double phase =
-            jitter ? std::fmod(static_cast<double>(chunkStart / ChunkSize) * 0.618033988749, 1.0)
-                   : 0.0;
-        const double chunkTime =
-            displayStart_ + (static_cast<double>(chunkStart) + phase) / subRate;
+            std::fmod(static_cast<double>(chunkStart / ChunkSize) * 0.618033988749, 1.0);
+        const size_t offset     = static_cast<size_t>(phase * static_cast<double>(stride));
+        const size_t chunkFirst = chunkStart * stride + offset;
+        if (chunkFirst >= count) {
+            break;
+        }
+        const size_t chunkCount = std::min(ChunkSize, (count - chunkFirst + stride - 1) / stride);
+        const double chunkTime  = static_cast<double>(first + chunkFirst) / rate;
         const sampling::WindowSamples samples =
             sampling::sampleDocumentWindowWithLeaves(document_, chunkTime, subRate, chunkCount);
         totalSubs.insert(totalSubs.end(), samples.total.begin(), samples.total.end());
@@ -407,15 +389,19 @@ void CanvasWidget::rebuildDisplaySamples() {
         }
     }
 
-    if (subsPerBucket > 1) {
-        displayRate_                = 2.0 * bucketRate;
+    const size_t evaluated = totalSubs.size();
+    if (bucketSize > 1) {
+        displayRate_                = 2.0 * rate / static_cast<double>(bucketSize);
+        // The last bucket may hold fewer values than the others: the window ends
+        // where the document does, not on a bucket boundary.
         const auto reduceToEnvelope = [&](const std::vector<double>& subs) {
             std::vector<double> envelope;
-            envelope.reserve(bucketCount * 2);
-            for (size_t bucket = 0; bucket < bucketCount; ++bucket) {
-                const auto first = subs.begin() + static_cast<ptrdiff_t>(bucket * subsPerBucket);
-                const auto [minimum, maximum] =
-                    std::minmax_element(first, first + static_cast<ptrdiff_t>(subsPerBucket));
+            envelope.reserve(2 * ((subs.size() + subsPerBucket - 1) / subsPerBucket));
+            for (size_t begin = 0; begin < subs.size(); begin += subsPerBucket) {
+                const size_t end = std::min(begin + subsPerBucket, subs.size());
+                const auto from  = subs.begin() + static_cast<ptrdiff_t>(begin);
+                const auto to    = subs.begin() + static_cast<ptrdiff_t>(end);
+                const auto [minimum, maximum] = std::minmax_element(from, to);
                 envelope.push_back(*minimum);
                 envelope.push_back(*maximum);
             }
@@ -427,7 +413,7 @@ void CanvasWidget::rebuildDisplaySamples() {
         }
         totalSamples_ = reduceToEnvelope(totalSubs);
     } else {
-        displayRate_  = std::max(subRate, std::numeric_limits<double>::min());
+        displayRate_  = rate;
         leafSamples_  = std::move(leafSubs);
         totalSamples_ = std::move(totalSubs);
     }
@@ -435,9 +421,9 @@ void CanvasWidget::rebuildDisplaySamples() {
     if (reported) {
         emit recalculationProgress(100);
     }
-    qCDebug(zwePerf) << "rebuildDisplaySamples:" << timer.elapsed() << "ms," << subCount
-                     << "sub-samples x" << leafPaths_.size() << "leaf layers," << subsPerBucket
-                     << "per bucket";
+    qCDebug(zwePerf) << "rebuildDisplaySamples:" << timer.elapsed() << "ms," << evaluated
+                     << "values x" << leafPaths_.size() << "leaf layers," << subsPerBucket
+                     << "per bucket, stride" << stride;
 }
 
 void CanvasWidget::fitToDocument() {
@@ -505,7 +491,26 @@ double CanvasWidget::pixelToY(double pixel, const QRect& area) const {
 }
 
 double CanvasWidget::valueAtTime(double time) const {
+    // Inside the exported stretch the value on output at that time: the one of
+    // the last sample at or before it, which is what the plot draws there.
+    const size_t count = sampling::sampleCount(document_);
+    if (count > 0 && time >= 0.0) {
+        const double index = std::floor(time * document_.sampleRate);
+        if (index < static_cast<double>(count)) {
+            return sampling::documentValueAt(
+                document_, sampling::sampleTime(document_, static_cast<size_t>(index))
+            );
+        }
+    }
     return sampling::documentValueAt(document_, time);
+}
+
+bool CanvasWidget::displayedAsSteps(const QRect& area) const {
+    // Enveloped samples never are: their entries are at most about half a pixel
+    // apart.
+    const double span = view_.xMax - view_.xMin;
+    return displayRate_ > 0.0 && span > 0.0 &&
+           static_cast<double>(area.width()) / (span * displayRate_) >= 1.0;
 }
 
 std::optional<double> CanvasWidget::displayedLeafValue(
@@ -522,19 +527,47 @@ std::optional<double> CanvasWidget::displayedLeafValue(
     if (position < -1.0 || position > static_cast<double>(samples.size())) {
         return std::nullopt;
     }
+    const auto valueAt = [&](std::ptrdiff_t index) -> std::optional<double> {
+        if (index < 0 || index >= static_cast<std::ptrdiff_t>(samples.size())) {
+            return std::nullopt;
+        }
+        return samples[static_cast<size_t>(index)];
+    };
+    std::optional<double> closest;
+    const auto consider = [&](double value) {
+        if (! closest || std::abs(value - targetValue) < std::abs(*closest - targetValue)) {
+            closest = value;
+        }
+    };
+    // A value is held from its own sample time until the next one's.
+    const auto held  = static_cast<std::ptrdiff_t>(std::floor(position));
+    const QRect area = plotRect();
+    if (displayedAsSteps(area)) {
+        if (const auto value = valueAt(held)) {
+            consider(*value);
+        }
+        // The risers at either end of the held stretch are curve as well, all
+        // the way from one value to the next, as long as the pointer is near
+        // enough to them that it may have aimed at one.
+        const double pointer = xToPixel(time, area);
+        for (const std::ptrdiff_t edge : {held, held + 1}) {
+            const double edgeTime = displayStart_ + static_cast<double>(edge) / displayRate_;
+            const auto before     = valueAt(edge - 1);
+            const auto after      = valueAt(edge);
+            if (before && after && std::abs(xToPixel(edgeTime, area) - pointer) <= CurveHitRadius) {
+                consider(std::clamp(
+                    targetValue, std::min(*before, *after), std::max(*before, *after)
+                ));
+            }
+        }
+        return closest;
+    }
     // The neighbours count too: zoomed out, a pixel column holds the minimum
     // and the maximum of a whole bucket, and both are curve the eye sees there.
     // The one nearest the cursor is the one that was clicked at.
-    const auto center = static_cast<std::ptrdiff_t>(std::llround(position));
-    std::optional<double> closest;
     for (std::ptrdiff_t offset = -1; offset <= 1; ++offset) {
-        const std::ptrdiff_t candidate = center + offset;
-        if (candidate < 0 || candidate >= static_cast<std::ptrdiff_t>(samples.size())) {
-            continue;
-        }
-        const double value = samples[static_cast<size_t>(candidate)];
-        if (! closest || std::abs(value - targetValue) < std::abs(*closest - targetValue)) {
-            closest = value;
+        if (const auto value = valueAt(held + offset)) {
+            consider(*value);
         }
     }
     return closest;
@@ -581,12 +614,51 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
         painter.setRenderHint(QPainter::Antialiasing, true);
 
         // Samples cover exactly the visible window, so every one is drawn.
-        // Dense data (at least one sample per pixel column) becomes one
-        // vertical min/max line per column. That is indistinguishable inside a
-        // 1 px column and avoids QPainter's wide-pen stroking of thousands of
-        // steep zigzag joins, which is very slow for signals that alias at
-        // display resolution.
-        if (samples.size() >= static_cast<size_t>(area.width())) {
+        if (displayedAsSteps(area)) {
+            // Each value is what the output holds from its sample time until the
+            // next one's, where it jumps straight to the next value: a staircase
+            // of horizontal and vertical lines, never a slope between two
+            // values. The last one is held for its full sample period, which is
+            // where the exported signal ends. One polyline with a corner only
+            // where the value changes, so a translucent curve is not blended
+            // twice where two lines would meet, and a long constant stretch
+            // costs a single line. Its joins are all right angles, which are
+            // cheap to stroke, unlike the steep zigzags of the dense case.
+            QPen pen = painter.pen();
+            pen.setJoinStyle(Qt::MiterJoin);
+            painter.setPen(pen);
+            // Zoomed in far, the first and the last value can reach thousands of
+            // pixels beyond the plot; only the stretch that can be seen is kept.
+            const double leftLimit  = area.left() - 4.0;
+            const double rightLimit = area.right() + 4.0;
+            const auto timePixel    = [&](size_t index) {
+                return std::clamp(
+                    xToPixel(displayStart_ + static_cast<double>(index) / displayRate_, area),
+                    leftLimit,
+                    rightLimit
+                );
+            };
+            QPolygonF steps;
+            steps.reserve(static_cast<qsizetype>(2 * samples.size() + 1));
+            double previousY = 0.0;
+            for (size_t index = 0; index < samples.size(); ++index) {
+                const double y = yToPixel(samples[index], area);
+                if (index == 0) {
+                    steps << QPointF(timePixel(index), y);
+                } else if (y != previousY) {
+                    const double x = timePixel(index);
+                    steps << QPointF(x, previousY) << QPointF(x, y);
+                }
+                previousY = y;
+            }
+            steps << QPointF(timePixel(samples.size()), previousY);
+            painter.drawPolyline(steps);
+        } else {
+            // Dense data (more than one value per pixel column) becomes one
+            // vertical min/max line per column. That is indistinguishable inside
+            // a 1 px column and avoids QPainter's wide-pen stroking of thousands
+            // of steep joins, which is very slow for signals that alias at
+            // display resolution.
             std::vector<QLineF> lines;
             lines.reserve(static_cast<size_t>(area.width()) + 1);
             bool haveColumn = false;
@@ -616,30 +688,6 @@ void CanvasWidget::paintEvent(QPaintEvent* event) {
                 previousY = y;
             }
             flushColumn();
-            painter.drawLines(lines.data(), static_cast<int>(lines.size()));
-        } else {
-            // Independent segments instead of one QPainterPath: the path
-            // stroker computes a join per vertex, which is far too slow for a
-            // few hundred near-vertical zigzag joins (aliased signals just
-            // below the dense threshold). Square caps let the segment ends
-            // meet seamlessly without joins. Round caps would too, but wide
-            // antialiased ones are much slower in Qt's raster engine.
-            QPen pen = painter.pen();
-            pen.setCapStyle(Qt::SquareCap);
-            painter.setPen(pen);
-            std::vector<QLineF> lines;
-            lines.reserve(samples.size());
-            QPointF previous;
-            for (size_t index = 0; index < samples.size(); ++index) {
-                const QPointF point(
-                    xToPixel(displayStart_ + index / displayRate_, area),
-                    yToPixel(samples[index], area)
-                );
-                if (index > 0) {
-                    lines.emplace_back(previous, point);
-                }
-                previous = point;
-            }
             painter.drawLines(lines.data(), static_cast<int>(lines.size()));
         }
         painter.restore();

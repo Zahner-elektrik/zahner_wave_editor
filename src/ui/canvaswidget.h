@@ -166,11 +166,16 @@ private:
     // grid cells instead of snap steps. False when nothing moved.
     bool nudgeSelectedPoint(int key, bool coarse);
     void rebuildDisplaySamples();
+    // Whether the display samples are single values at least a pixel apart,
+    // drawn as the steps the output holds them for, rather than one vertical
+    // min/max line per pixel column.
+    bool displayedAsSteps(const QRect& area) const;
     void updateCursorReadout(const QPointF& position);
     double xToPixel(double time, const QRect& rect) const;
     double yToPixel(double value, const QRect& rect) const;
     double pixelToX(double pixel, const QRect& rect) const;
     double pixelToY(double pixel, const QRect& rect) const;
+    // The value the output holds at the given time, as the plot draws it.
     double valueAtTime(double time) const;
     // The selected node, the selected leaf's segment, and the segment a
     // location points at; nullptr whenever the selection does not resolve.
@@ -210,8 +215,9 @@ private:
 
     WaveDocument document_;
     // Display samples cover only the visible time window (clamped to the
-    // document), at most ~2 samples per pixel: sample k of a layer is at
-    // displayStart_ + k / displayRate_.
+    // document) and lie on the document's sample grid; each one holds until the
+    // next. Zoomed out they are [min, max] pairs of two buckets per pixel.
+    // Sample k of a layer is at displayStart_ + k / displayRate_.
     double displayStart_ = 0.0;
     double displayRate_  = 0.0;
     std::vector<double> totalSamples_;

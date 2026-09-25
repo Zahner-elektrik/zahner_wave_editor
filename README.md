@@ -48,6 +48,11 @@ open format - and there is no reason to keep that to ourselves.
   without duplicating anything
 - **Direct manipulation** - drag points and segment boundaries in the plot, pan
   and zoom with the mouse, read time/value under the cursor
+- **Spectrum (FFT) and statistics** - a second plot below the waveform shows the
+  amplitude spectrum of the whole document, with selectable sample rate, window
+  (rectangular, Hann, flat top, Blackman-Harris) and logarithmic axes; next to it
+  DC, RMS, peak, crest factor, slew rate, fundamental, THD and a warning when the
+  sample rate is too low - calculated in the background and following every edit
 - **CSV import and export** - round-trip measured or externally generated curves
 - **Binary export** - raw little-endian `double` values, the exact byte stream
   the `zahner_link` Python library uploads as a WAVE resource, so no conversion

@@ -30,6 +30,8 @@
 #include <QScrollArea>
 #include <QSettings>
 #include <QSpinBox>
+#include <QSplitter>
+#include <QStackedWidget>
 #include <QStatusBar>
 #include <QTimer>
 #include <QToolBar>
@@ -51,6 +53,7 @@
 #include "core/csvio.h"
 #include "core/documenttransform.h"
 #include "core/segmentcontinuity.h"
+#include "core/spectrum.h"
 #include "core/version.h"
 #include "core/zwjio.h"
 #include "editonlyserver.h"
@@ -61,6 +64,9 @@
 #include "licenseviewerdialog.h"
 #include "propertypanel.h"
 #include "settingsdialog.h"
+#include "spectrumanalyzer.h"
+#include "spectrumpanel.h"
+#include "spectrumwidget.h"
 #include "structurepanel.h"
 #include "theme.h"
 
@@ -270,9 +276,24 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     canvasLayout->setSpacing(0);
     gridBar_ = new GridBar(canvasArea);
     canvasLayout->addWidget(gridBar_);
-    canvas_ = new CanvasWidget(canvasArea);
-    canvasLayout->addWidget(canvas_, 1);
+    // The spectrum goes below the waveform rather than into a dock: both share
+    // the width of the window, and the frequency axis reads best with as much of
+    // it as the time axis gets. A splitter lets the waveform take most of the
+    // height while the spectrum is only glanced at.
+    auto* plots = new QSplitter(Qt::Vertical, canvasArea);
+    plots->setObjectName(QStringLiteral("plotSplitter"));
+    plots->setChildrenCollapsible(false);
+    canvas_ = new CanvasWidget(plots);
+    plots->addWidget(canvas_);
+    spectrumWidget_ = new SpectrumWidget(plots);
+    spectrumWidget_->setObjectName(QStringLiteral("spectrumWidget"));
+    plots->addWidget(spectrumWidget_);
+    plots->setStretchFactor(0, 3);
+    plots->setStretchFactor(1, 2);
+    spectrumWidget_->hide();
+    canvasLayout->addWidget(plots, 1);
     setCentralWidget(canvasArea);
+    spectrumAnalyzer_ = new SpectrumAnalyzer(this);
     canvas_->setSnapSettings(gridBar_->settings());
 
     auto* structureDock = new QDockWidget(tr("Structure"), this);
@@ -289,7 +310,21 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     propertyScroll->setFrameShape(QFrame::NoFrame);
     propertyPanel_ = new PropertyPanel(propertyScroll);
     propertyScroll->setWidget(propertyPanel_);
-    propertyDock->setWidget(propertyScroll);
+    // The spectrum's settings take the place of the properties when the spectrum
+    // is clicked, the way a click on a curve brings up its segment: the dock
+    // always describes what was clicked last.
+    auto* spectrumScroll = new QScrollArea(propertyDock);
+    spectrumScroll->setObjectName(QStringLiteral("spectrumScrollArea"));
+    spectrumScroll->setWidgetResizable(true);
+    spectrumScroll->setFrameShape(QFrame::NoFrame);
+    spectrumPanel_ = new SpectrumPanel(spectrumScroll);
+    spectrumPanel_->setObjectName(QStringLiteral("spectrumPanel"));
+    spectrumScroll->setWidget(spectrumPanel_);
+    sidebarPages_ = new QStackedWidget(propertyDock);
+    sidebarPages_->setObjectName(QStringLiteral("sidebarPages"));
+    sidebarPages_->addWidget(propertyScroll);
+    sidebarPages_->addWidget(spectrumScroll);
+    propertyDock->setWidget(sidebarPages_);
     addDockWidget(Qt::RightDockWidgetArea, propertyDock);
 
     auto* fileMenu = menuBar()->addMenu(tr("&File"));
@@ -473,6 +508,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
         toolbarIcon("fit-waveform"), tr("&Fit Waveform"), canvas_, &CanvasWidget::fitToDocument
     );
     fitAction->setObjectName(QStringLiteral("fitAction"));
+    connect(fitAction, &QAction::triggered, spectrumWidget_, &SpectrumWidget::fitToSpectrum);
+    spectrumAction_ = viewMenu->addAction(toolbarIcon("spectrum"), tr("Show &Spectrum (FFT)"));
+    spectrumAction_->setObjectName(QStringLiteral("spectrumAction"));
+    spectrumAction_->setCheckable(true);
+    connect(spectrumAction_, &QAction::toggled, this, &MainWindow::setSpectrumVisible);
 
     // Theme and accent color are application settings, not per-window view
     // state: they live in Edit > Settings.
@@ -515,6 +555,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     toolbar->addAction(removeSegmentAction_);
     toolbar->addSeparator();
     toolbar->addAction(fitAction);
+    toolbar->addAction(spectrumAction_);
     auto* toolbarSpacer = new QWidget(toolbar);
     toolbarSpacer->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     toolbar->addWidget(toolbarSpacer);
@@ -572,6 +613,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
     setActionHelp(moveLaterAction_, tr("Move the selected segment later"));
     setActionHelp(removeSegmentAction_, tr("Remove the selected waveform segment"));
     setActionHelp(fitAction, tr("Fit the complete waveform in the canvas"));
+    setActionHelp(
+        spectrumAction_, tr("Show the spectrum (FFT) and the statistics of the waveform below it")
+    );
     setActionHelp(settingsAction, tr("Change the application settings"));
     updateStructureActionState();
 
@@ -597,6 +641,47 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
             tr("t = %1 s, value = %2").arg(time, 0, 'g', 5).arg(value, 0, 'g', 5)
         );
     });
+    connect(
+        spectrumWidget_,
+        &SpectrumWidget::cursorReadout,
+        this,
+        [this](double frequency, double amplitude) {
+            if (! std::isfinite(frequency)) {
+                cursorReadout_->clear();
+                return;
+            }
+            cursorReadout_->setText(tr("f = %1 Hz, amplitude = %2")
+                                        .arg(frequency, 0, 'g', 5)
+                                        .arg(amplitude, 0, 'g', 5));
+        }
+    );
+    connect(spectrumWidget_, &SpectrumWidget::activated, this, [this] {
+        showSpectrumSettings(true);
+    });
+    connect(
+        spectrumAnalyzer_, &SpectrumAnalyzer::finished, this, &MainWindow::showSpectrumAnalysis
+    );
+    // Only a new rate or window needs a new analysis; the axes are the plot's
+    // own business and switch without one.
+    connect(
+        spectrumPanel_,
+        &SpectrumPanel::settingsChanged,
+        this,
+        [this, applied = spectrumPanel_->settings()]() mutable {
+            const SpectrumPanel::Settings settings = spectrumPanel_->settings();
+            spectrumWidget_->setLogFrequency(settings.logFrequency);
+            spectrumWidget_->setLogAmplitude(settings.logAmplitude);
+            if (settings.sampleRate != applied.sampleRate || settings.window != applied.window) {
+                // Another rate moves the Nyquist frequency, and with it the end
+                // of the frequency axis.
+                spectrumNeedsFit_ = spectrumNeedsFit_ || settings.sampleRate != applied.sampleRate;
+                requestSpectrum();
+            }
+            applied = settings;
+        }
+    );
+    spectrumWidget_->setLogFrequency(spectrumPanel_->settings().logFrequency);
+    spectrumWidget_->setLogAmplitude(spectrumPanel_->settings().logAmplitude);
     connect(
         canvas_,
         &CanvasWidget::segmentSelected,
@@ -1297,6 +1382,11 @@ void MainWindow::applyDocumentState(
     canvas_->setDocument(document_, resetView);
     canvas_->setSelectedLayerPath(selectedLayerPath_);
     canvas_->setSelectedSegmentIndex(selectedSegmentIndex_);
+    spectrumNeedsFit_ = spectrumNeedsFit_ || resetView;
+    // May change the analysis rate, which requests an analysis of its own; the
+    // one below then simply replaces it before it has started.
+    spectrumPanel_->setValueRate(document_.sampleRate);
+    requestSpectrum();
     structurePanel_->setDocument(document_);
     structurePanel_->setSelection(selectedLayerPath_, selectedSegmentIndex_);
     propertyPanel_->setDocument(document_);
@@ -1428,7 +1518,79 @@ void MainWindow::setSelection(const LayerPath& layerPath, std::optional<size_t> 
     canvas_->setSelectedSegmentIndex(selectedSegmentIndex_);
     structurePanel_->setSelection(selectedLayerPath_, selectedSegmentIndex_);
     propertyPanel_->setSelection(selectedLayerPath_, selectedSegmentIndex_);
+    showSpectrumSettings(false);
     updateStructureActionState();
+}
+
+void MainWindow::setSpectrumVisible(bool visible) {
+    spectrumWidget_->setVisible(visible);
+    if (! visible) {
+        spectrumAnalyzer_->cancel();
+        showSpectrumSettings(false);
+        return;
+    }
+    // Showing the spectrum brings up its settings too, which is where one looks
+    // next: at the figures, or for the rate to analyze at.
+    spectrumNeedsFit_ = true;
+    showSpectrumSettings(true);
+    requestSpectrum();
+}
+
+void MainWindow::requestSpectrum() {
+    if (! spectrumAction_ || ! spectrumAction_->isChecked()) {
+        return;
+    }
+    if (! spectrumShown_) {
+        spectrumWidget_->setMessage(tr("Calculating the spectrum…"));
+        spectrumPanel_->setMessage(tr("Calculating…"));
+    }
+    const SpectrumPanel::Settings settings = spectrumPanel_->settings();
+    spectrumAnalyzer_->request(document_, settings.sampleRate, settings.window);
+}
+
+void MainWindow::showSpectrumAnalysis(const spectrum::Analysis& analysis) {
+    using Status = spectrum::Analysis::Status;
+    if (analysis.status == Status::Cancelled) {
+        return;
+    }
+    if (analysis.status == Status::Ok) {
+        spectrumWidget_->setMessage({});
+        spectrumWidget_->setSpectrum(
+            analysis.spectrum.binWidth, analysis.spectrum.amplitude, spectrumNeedsFit_
+        );
+        spectrumPanel_->setStatistics(analysis.statistics);
+        spectrumNeedsFit_ = false;
+        spectrumShown_    = true;
+        return;
+    }
+    const QString message =
+        analysis.status == Status::TooLong
+            ? tr("At this sample rate the waveform has %L1 samples, more than the %L2 a "
+                 "spectrum is calculated for. Lower the sample rate of the spectrum.")
+                  .arg(static_cast<qulonglong>(analysis.requestedCount))
+                  .arg(static_cast<qulonglong>(spectrum::MaximumAnalysisCount))
+            : tr("There is no waveform to analyze.");
+    spectrumWidget_->setSpectrum(0.0, {});
+    spectrumWidget_->setMessage(message);
+    spectrumPanel_->setMessage(message);
+    // The next spectrum starts from scratch, so it is fitted and nothing stale
+    // is kept up while it is calculated.
+    spectrumNeedsFit_ = true;
+    spectrumShown_    = false;
+}
+
+void MainWindow::showSpectrumSettings(bool spectrum) {
+    if (! sidebarPages_) {
+        return;
+    }
+    const bool shown = spectrum && spectrumAction_ && spectrumAction_->isChecked();
+    sidebarPages_->setCurrentIndex(shown ? 1 : 0);
+    if (shown) {
+        if (auto* dock = findChild<QDockWidget*>(QStringLiteral("propertyDock"))) {
+            dock->show();
+            dock->raise();
+        }
+    }
 }
 
 void MainWindow::addLayerNode(LayerKind kind) {

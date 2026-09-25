@@ -44,6 +44,47 @@ WaveDocument pointsDocument() {
     return document;
 }
 
+// One layer at a value rate of 10 1/s that is 0 for half a second and 1 for
+// the other half, or ramps from 0 to 1 over the whole second: few enough values
+// that each one is drawn several pixels wide. Both fit to the same view as
+// pointsDocument(), so plotPosition() below applies.
+WaveDocument lowRateDocument(bool ramp) {
+    WaveDocument document;
+    document.sampleRate = 10.0;
+
+    std::vector<Segment> segments;
+    if (ramp) {
+        Segment segment;
+        segment.duration = 1.0;
+        segment.params   = RampParams{.startValue = 0.0, .endValue = 1.0};
+        segments.push_back(segment);
+    } else {
+        Segment low;
+        low.duration = 0.5;
+        low.params   = DcParams{.value = 0.0};
+        Segment high;
+        high.duration = 0.5;
+        high.params   = DcParams{.value = 1.0};
+        segments      = {low, high};
+    }
+    document.layers.push_back(WaveLayer{.name = QStringLiteral("Layer"), .segments = segments});
+    return document;
+}
+
+// Whether a curve is drawn at or right next to the given pixel. Curves are
+// saturated colors, the grid and the frame are not.
+bool curveNear(const QImage& image, const QPoint& position) {
+    for (int dy = -1; dy <= 1; ++dy) {
+        for (int dx = -1; dx <= 1; ++dx) {
+            const QPoint pixel = position + QPoint(dx, dy);
+            if (image.rect().contains(pixel) && image.pixelColor(pixel).hsvSaturation() > 60) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 // Where a point of pointsDocument() lands on screen. Margins are treated as
 // black-box padding, as in boundaryPosition() below.
 QPoint plotPosition(const CanvasWidget& canvas, double time, double value) {
@@ -61,8 +102,10 @@ QPoint plotPosition(const CanvasWidget& canvas, double time, double value) {
     };
 }
 
-// Two constant layers inside a group, plus one next to it: three curves whose
-// colors and emphasis can be told apart in a grabbed image.
+// Two constant layers inside a group, plus a ramp next to it: three curves whose
+// colors and emphasis can be told apart in a grabbed image. The ramp makes the
+// total sweep 0 .. 6, so fitting the view to it keeps the two constant curves
+// in sight.
 WaveDocument groupedDocument() {
     WaveDocument document;
     document.sampleRate      = 100.0;
@@ -74,7 +117,10 @@ WaveDocument groupedDocument() {
         return WaveLayer{.name = name, .segments = {segment}};
     };
 
-    document.layers.push_back(constantLayer(QStringLiteral("Alone"), 1.0));
+    Segment ramp;
+    ramp.duration = 1.0;
+    ramp.params   = RampParams{.startValue = -5.0, .endValue = 1.0};
+    document.layers.push_back(WaveLayer{.name = QStringLiteral("Alone"), .segments = {ramp}});
     WaveLayer group{.name = QStringLiteral("Group"), .kind = LayerKind::Group};
     group.children.push_back(constantLayer(QStringLiteral("Inner A"), 2.0));
     group.children.push_back(constantLayer(QStringLiteral("Inner B"), 3.0));
@@ -201,6 +247,8 @@ private slots:
     void doubleClickingAScaleFitsOnlyItsAxis();
     void hoveringAnAxisShowsTheScalingCursor();
     void theLegendCanBeSwitchedOff();
+    void eachValueIsHeldUntilTheNextOne();
+    void theCursorReadsTheHeldValue();
 };
 
 void TestCanvasWidget::curveSelectionUsesWideInvisibleCorridor() {
@@ -722,6 +770,51 @@ void TestCanvasWidget::theLegendCanBeSwitchedOff() {
     canvas.setLegendVisible(true);
     QCoreApplication::processEvents();
     QCOMPARE(canvas.grab().toImage(), withLegend);
+}
+
+void TestCanvasWidget::eachValueIsHeldUntilTheNextOne() {
+    CanvasWidget canvas;
+    canvas.resize(640, 360);
+    canvas.setLegendVisible(false);
+    canvas.setDocument(lowRateDocument(false));
+    canvas.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&canvas));
+    const QImage image = canvas.grab().toImage();
+
+    // Value 4 (t = 0.4) is the last 0, value 5 (t = 0.5) the first 1. The output
+    // holds the 0 until 0.5 and then jumps: nothing in between is ever output,
+    // so no line may slope across it.
+    QVERIFY(curveNear(image, plotPosition(canvas, 0.45, 0.0)));
+    QVERIFY(! curveNear(image, plotPosition(canvas, 0.45, 0.5)));
+    QVERIFY(curveNear(image, plotPosition(canvas, 0.5, 0.5)));
+    QVERIFY(curveNear(image, plotPosition(canvas, 0.55, 1.0)));
+
+    // The last value (t = 0.9) is held for its full period, up to the end of
+    // the document, and the curve does not fall off to whatever the model says
+    // beyond it.
+    QVERIFY(curveNear(image, plotPosition(canvas, 0.97, 1.0)));
+    QVERIFY(! curveNear(image, plotPosition(canvas, 0.97, 0.5)));
+}
+
+void TestCanvasWidget::theCursorReadsTheHeldValue() {
+    CanvasWidget canvas;
+    canvas.resize(640, 360);
+    canvas.setDocument(lowRateDocument(true));
+    canvas.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&canvas));
+
+    double time  = 0.0;
+    double value = 0.0;
+    connect(&canvas, &CanvasWidget::cursorReadout, this, [&](double t, double v) {
+        time  = t;
+        value = v;
+    });
+
+    // Between two sample times the output still holds the earlier value: 0.4
+    // of the ramp, not the 0.45 the model would give there.
+    hover(canvas, plotPosition(canvas, 0.45, 0.5));
+    QVERIFY(time > 0.42 && time < 0.48);
+    QVERIFY(qAbs(value - 0.4) < 1e-9);
 }
 
 QTEST_MAIN(TestCanvasWidget)

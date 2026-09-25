@@ -12,6 +12,7 @@
 #include <QScrollArea>
 #include <QSettings>
 #include <QSpinBox>
+#include <QStackedWidget>
 #include <QTimer>
 #include <QToolBar>
 #include <QTreeWidget>
@@ -24,6 +25,8 @@
 #include "ui/canvaswidget.h"
 #include "ui/engineeringedit.h"
 #include "ui/mainwindow.h"
+#include "ui/spectrumanalyzer.h"
+#include "ui/spectrumwidget.h"
 #include "ui/structurepanel.h"
 
 using namespace zwe;
@@ -40,6 +43,7 @@ private slots:
     void groupsTakeNewLayersAndDissolveBackIntoTheirLevel();
     void openingADocumentLeavesNothingToUndo();
     void savingAssignsADocumentIdOnceAndKeepsIt();
+    void theSpectrumIsShownBelowTheWaveformOnDemand();
     void editOnlyRemovesEveryWayToSwitchDocuments();
 };
 
@@ -370,6 +374,70 @@ void TestMainWindow::groupsTakeNewLayersAndDissolveBackIntoTheirLevel() {
 
     undoStack->undo();
     QCOMPARE(tree->topLevelItem(0)->childCount(), 1);  // the group is back
+}
+
+void TestMainWindow::theSpectrumIsShownBelowTheWaveformOnDemand() {
+    MainWindow window;
+    QVERIFY(window.openDocument(QStringLiteral(ZWE_TEST_DATA_DIR "/example.zwj")));
+    window.show();
+    QApplication::processEvents();
+
+    auto* action   = window.findChild<QAction*>(QStringLiteral("spectrumAction"));
+    auto* spectrum = window.findChild<SpectrumWidget*>(QStringLiteral("spectrumWidget"));
+    auto* pages    = window.findChild<QStackedWidget*>(QStringLiteral("sidebarPages"));
+    auto* analyzer = window.findChild<SpectrumAnalyzer*>();
+    auto* tree     = window.findChild<QTreeWidget*>();
+    QVERIFY(action);
+    QVERIFY(spectrum);
+    QVERIFY(pages);
+    QVERIFY(analyzer);
+    QVERIFY(tree);
+
+    // Off until asked for, and nothing is computed while it is off.
+    QVERIFY(action->isCheckable());
+    QVERIFY(! action->isChecked());
+    QVERIFY(! spectrum->isVisible());
+    QCOMPARE(pages->currentIndex(), 0);
+
+    // The same action sits in the View menu and next to Fit Waveform.
+    auto* toolbar = window.findChild<QToolBar*>(QStringLiteral("fileToolbar"));
+    QVERIFY(toolbar);
+    const QList<QAction*> tools = toolbar->actions();
+    const auto fit = std::find_if(tools.begin(), tools.end(), [](QAction* candidate) {
+        return candidate->objectName() == QStringLiteral("fitAction");
+    });
+    QVERIFY(fit != tools.end());
+    QVERIFY(std::next(fit) != tools.end());
+    QCOMPARE(*std::next(fit), action);
+
+    int results                     = 0;
+    spectrum::Analysis::Status last = spectrum::Analysis::Status::Empty;
+    connect(analyzer, &SpectrumAnalyzer::finished, &window, [&](const spectrum::Analysis& result) {
+        last = result.status;
+        ++results;
+    });
+
+    // Switching it on shows the plot and its settings, and analyzes the waveform.
+    action->trigger();
+    QVERIFY(spectrum->isVisible());
+    QCOMPARE(pages->currentIndex(), 1);
+    QTRY_VERIFY_WITH_TIMEOUT(results > 0, 10000);
+    QCOMPARE(last, spectrum::Analysis::Status::Ok);
+
+    // Picking a segment gives the sidebar back to its properties; a click into
+    // the spectrum brings its settings up again.
+    // Whichever item is not current already, so the tree reports a new selection.
+    auto* layer = tree->topLevelItem(0);
+    QVERIFY(layer);
+    tree->setCurrentItem(tree->currentItem() == layer ? layer->child(0) : layer);
+    QCOMPARE(pages->currentIndex(), 0);
+    QTest::mouseClick(spectrum, Qt::LeftButton, Qt::NoModifier, spectrum->rect().center());
+    QCOMPARE(pages->currentIndex(), 1);
+
+    // Off again: the plot goes and so does its page.
+    action->trigger();
+    QVERIFY(! spectrum->isVisible());
+    QCOMPARE(pages->currentIndex(), 0);
 }
 
 QTEST_MAIN(TestMainWindow)

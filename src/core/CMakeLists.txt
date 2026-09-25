@@ -1,5 +1,5 @@
-# wavecore: data model, sampling engine, expression evaluation, .zwj, CSV and
-# binary IO.
+# wavecore: data model, sampling engine, spectrum analysis, expression evaluation,
+# .zwj, CSV and binary IO.
 # GUI-free by design (Qt6::Core only) so everything in here is unit-testable.
 add_library(wavecore STATIC
     version.cpp
@@ -14,6 +14,8 @@ add_library(wavecore STATIC
     documenttransform.h
     sampling.cpp
     sampling.h
+    spectrum.cpp
+    spectrum.h
     segmentcontinuity.cpp
     segmentcontinuity.h
     expression.cpp
