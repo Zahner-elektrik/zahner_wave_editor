@@ -4,7 +4,11 @@
 # The release number is the highest v-prefixed tag in the repository
 #
 #     git tag --list "v*" --sort=-v:refname
-
+#
+# unless the build passes it in with -DZWE_VERSION_OVERRIDE=26.40.0, e.g. because
+# it keeps the version in a file of its own. ZWE_VERSION is then that number,
+# ZWE_VERSION_FULL the number with a "v" in front as if it were the tag
+# ("v26.40.0"), and git is not asked at all.
 
 # Sets in the caller's scope:
 #
@@ -21,18 +25,29 @@ function(zwe_get_git_version)
     set(_tag "")
     set(_version "0.0.0")
     set(_version_full "0.0.0-unknown")
+    set(_git_result 1)
 
-    # --absolute-git-dir also answers "is git usable and is this a repository at
-    # all", so a tarball build or a machine without git takes the fallback below
-    # instead of erroring out.
-    execute_process(
-        COMMAND git rev-parse --absolute-git-dir
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        OUTPUT_VARIABLE _git_dir
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        RESULT_VARIABLE _git_result
-        ERROR_QUIET
-    )
+    if(ZWE_VERSION_OVERRIDE)
+        if(NOT ZWE_VERSION_OVERRIDE MATCHES "^[0-9]+\\.[0-9]+(\\.[0-9]+)?(\\.[0-9]+)?$")
+            message(FATAL_ERROR
+                "ZWE_VERSION_OVERRIDE '${ZWE_VERSION_OVERRIDE}' is not a numeric "
+                "version such as 26.40.0.")
+        endif()
+        set(_version "${ZWE_VERSION_OVERRIDE}")
+        set(_version_full "v${ZWE_VERSION_OVERRIDE}")
+    else()
+        # --absolute-git-dir also answers "is git usable and is this a repository
+        # at all", so a tarball build or a machine without git takes the fallback
+        # below instead of erroring out.
+        execute_process(
+            COMMAND git rev-parse --absolute-git-dir
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            OUTPUT_VARIABLE _git_dir
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE _git_result
+            ERROR_QUIET
+        )
+    endif()
 
     if(_git_result EQUAL 0)
         # Re-run the configure step when the checkout moves or a tag arrives, so
@@ -130,7 +145,7 @@ function(zwe_get_git_version)
         endif()
     endif()
 
-    if(NOT _tag)
+    if(NOT _tag AND NOT ZWE_VERSION_OVERRIDE)
         message(WARNING "No v-prefixed git tag found in '${CMAKE_CURRENT_SOURCE_DIR}'. The version \
 falls back to ${_version} (build ${_version_full}). Run 'git fetch --all --tags --force' if this \
 is a CI workspace.")
