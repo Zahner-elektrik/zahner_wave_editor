@@ -998,13 +998,13 @@ Im Block „Benutzerdefinierte Wellenform“ einzutragende Werterate: %3 1/s</tr
     </message>
     <message>
         <location line="+823"/>
-        <source>Scale all layers and segments at once. The document Value Rate is not changed.</source>
-        <translation>Skaliert alle Ebenen und Segmente auf einmal. Die Value Rate des Dokuments wird nicht geändert.</translation>
+        <source>Scale the resulting waveform at once. Multiplying layers keep their amplitude, so the result is scaled by the factor exactly once. The document Value Rate is not changed.</source>
+        <translation>Skaliert die resultierende Wellenform auf einmal. Multiplizierende Ebenen behalten ihre Amplitude, sodass das Ergebnis genau einmal mit dem Faktor skaliert wird. Die Value Rate des Dokuments wird nicht geändert.</translation>
     </message>
     <message>
         <location line="+12"/>
-        <source>Multiplies all signal values and offsets.</source>
-        <translation>Multipliziert alle Signalwerte und Offsets.</translation>
+        <source>Multiplies the values of the resulting waveform.</source>
+        <translation>Multipliziert die Werte der resultierenden Wellenform.</translation>
     </message>
     <message>
         <location line="+1"/>

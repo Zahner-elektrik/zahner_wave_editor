@@ -20,18 +20,23 @@ struct ScaleFactors {
     QRegularExpression timeVariable;
 };
 
-void scaleLayerTree(WaveLayer& layer, const ScaleFactors& factors) {
+void scaleLevel(
+    std::vector<WaveLayer>& nodes, const ScaleFactors& scaled, const ScaleFactors& timeOnly
+);
+
+// Scales the node's own curve by factors.amplitudeFactor. timeOnly carries the
+// same time factor with an amplitude factor of 1, for the nodes of a subtree
+// whose amplitude has to stay as it is (see scaleLevel()).
+void scaleLayerTree(WaveLayer& layer, const ScaleFactors& factors, const ScaleFactors& timeOnly) {
+    // A group holds no segments of its own, so scaling it means scaling the
+    // fold of its children; a leaf has no children and only runs the loop below.
+    scaleLevel(layer.children, factors, timeOnly);
+
     const double amplitudeFactor           = factors.amplitudeFactor;
     const double timeFactor                = factors.timeFactor;
     const QString& amplitude               = factors.amplitudeText;
     const QString& time                    = factors.timeText;
     const QRegularExpression& timeVariable = factors.timeVariable;
-
-    // A group holds no segments of its own, so scaling it means scaling its
-    // subtree; a leaf has no children and only runs the loop below.
-    for (WaveLayer& child : layer.children) {
-        scaleLayerTree(child, factors);
-    }
 
     for (Segment& segment : layer.segments) {
         segment.duration *= timeFactor;
@@ -126,6 +131,27 @@ void scaleLayerTree(WaveLayer& layer, const ScaleFactors& factors) {
     }
 }
 
+// Scales the fold of one level - what sampling makes of these nodes - by
+// scaled.amplitudeFactor, not every node in it. The fold starts with the first
+// enabled node and then adds or multiplies the others in list order, so the
+// result scales by a exactly when the first enabled node and every Add node
+// scale by a, while a Multiply node keeps its amplitude: (a*x + a*y) * w is
+// a*((x + y) * w). Scaling the Multiply nodes as well would scale the result by
+// a once per multiplying node. A disabled node is treated by its mode, as it
+// would be once enabled below the first enabled node. The time factor applies
+// to every node regardless.
+void scaleLevel(
+    std::vector<WaveLayer>& nodes, const ScaleFactors& scaled, const ScaleFactors& timeOnly
+) {
+    bool started = false;
+    for (WaveLayer& node : nodes) {
+        const bool startsFold      = node.enabled && ! started;
+        const bool scalesAmplitude = startsFold || node.mode == LayerMode::Add;
+        started                    = started || node.enabled;
+        scaleLayerTree(node, scalesAmplitude ? scaled : timeOnly, timeOnly);
+    }
+}
+
 }  // namespace
 
 WaveDocument scaleDocument(
@@ -143,9 +169,10 @@ WaveDocument scaleDocument(
         QString::number(timeFactor, 'g', 17),
         QRegularExpression(QStringLiteral("\\bt\\b"))
     };
-    for (WaveLayer& layer : scaled.layers) {
-        scaleLayerTree(layer, factors);
-    }
+    ScaleFactors timeOnly    = factors;
+    timeOnly.amplitudeFactor = 1.0;
+    timeOnly.amplitudeText   = QStringLiteral("1");
+    scaleLevel(scaled.layers, factors, timeOnly);
     return scaled;
 }
 

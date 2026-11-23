@@ -1200,7 +1200,8 @@ void MainWindow::scaleWaveform() {
 
     auto* layout = new QVBoxLayout(&dialog);
     auto* intro  = new QLabel(
-        tr("Scale all layers and segments at once. The document Value Rate is not changed."),
+        tr("Scale the resulting waveform at once. Multiplying layers keep their amplitude, so the "
+           "result is scaled by the factor exactly once. The document Value Rate is not changed."),
         &dialog
     );
     intro->setWordWrap(true);
@@ -1212,7 +1213,7 @@ void MainWindow::scaleWaveform() {
     amplitudeFactor->setDecimals(6);
     amplitudeFactor->setRange(-1.0e9, 1.0e9);
     amplitudeFactor->setValue(1.0);
-    amplitudeFactor->setToolTip(tr("Multiplies all signal values and offsets."));
+    amplitudeFactor->setToolTip(tr("Multiplies the values of the resulting waveform."));
     form->addRow(tr("Amplitude factor"), amplitudeFactor);
 
     auto* timeFactor = new QDoubleSpinBox(&dialog);

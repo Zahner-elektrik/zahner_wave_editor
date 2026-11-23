@@ -30,6 +30,7 @@ class TestDocumentTransform : public QObject {
 private slots:
     void scalesAmplitudeAndTimeParameters();
     void formulaScalingPreservesShape();
+    void multiplyingLayersScaleTheResultOnce();
     void invalidFactorsLeaveDocumentUnchanged();
 };
 
@@ -123,6 +124,68 @@ void TestDocumentTransform::formulaScalingPreservesShape() {
         sampling::segmentValueAt(scaledFormula, 1.5, 1.5),
         3.0 * sampling::segmentValueAt(formula, 0.75, 0.75)
     );
+}
+
+// F-296: with a Multiply layer below an Add layer, scaling every layer by 2
+// scaled the result by 4. The result has to scale by the factor itself, also
+// inside groups and when a disabled node sits at the top of a level.
+void TestDocumentTransform::multiplyingLayersScaleTheResultOnce() {
+    auto dcLayer = [](double value, double duration, LayerMode mode) {
+        Segment dc                          = defaultSegment(SegmentType::Dc);
+        dc.duration                         = duration;
+        std::get<DcParams>(dc.params).value = value;
+        WaveLayer layer;
+        layer.mode = mode;
+        layer.segments.push_back(dc);
+        return layer;
+    };
+
+    WaveLayer signal;
+    Segment ramp          = defaultSegment(SegmentType::Ramp);
+    ramp.duration         = 4.0;
+    auto& rampParams      = std::get<RampParams>(ramp.params);
+    rampParams.startValue = 0.5;
+    rampParams.endValue   = 1.5;
+    signal.segments.push_back(ramp);
+
+    WaveLayer window;
+    window.mode         = LayerMode::Multiply;
+    Segment hann        = defaultSegment(SegmentType::Window);
+    hann.duration       = 3.0;
+    auto& windowParams  = std::get<WindowParams>(hann.params);
+    windowParams.offset = 0.25;
+    window.segments.push_back(hann);
+
+    // A group that multiplies the level, holding a fold of its own: its value
+    // has to stay unscaled as a whole.
+    WaveLayer gain;
+    gain.kind = LayerKind::Group;
+    gain.mode = LayerMode::Multiply;
+    gain.children.push_back(dcLayer(0.5, 4.0, LayerMode::Add));
+    gain.children.push_back(dcLayer(0.25, 2.0, LayerMode::Add));
+    gain.children.push_back(dcLayer(3.0, 4.0, LayerMode::Multiply));
+
+    // A disabled Multiply node above the first enabled one must not stop that
+    // one from starting the fold scaled.
+    WaveLayer disabled = dcLayer(7.0, 4.0, LayerMode::Multiply);
+    disabled.enabled   = false;
+
+    WaveDocument document;
+    document.layers.push_back(disabled);
+    document.layers.push_back(signal);
+    document.layers.push_back(window);
+    document.layers.push_back(gain);
+    document.layers.push_back(dcLayer(0.125, 4.0, LayerMode::Add));
+
+    for (const double factor : {2.0, -0.5}) {
+        const WaveDocument scaled = scaleDocument(document, factor, 2.0);
+        for (const double t : {0.0, 0.4, 1.1, 1.5, 2.2, 2.9, 3.5, 3.9}) {
+            compareDouble(
+                sampling::documentValueAt(scaled, 2.0 * t),
+                factor * sampling::documentValueAt(document, t)
+            );
+        }
+    }
 }
 
 void TestDocumentTransform::invalidFactorsLeaveDocumentUnchanged() {
