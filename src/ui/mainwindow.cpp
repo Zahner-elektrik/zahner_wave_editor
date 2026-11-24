@@ -841,6 +841,13 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent) {
             applyDocumentMutation(edited, LayerPath{}, std::nullopt, tr("Reorder Structure"));
         }
     );
+    connect(propertyPanel_, &PropertyPanel::statusMessage, this, [this](const QString& message) {
+        if (message.isEmpty()) {
+            statusBar()->clearMessage();
+        } else {
+            statusBar()->showMessage(message);
+        }
+    });
     connect(
         propertyPanel_,
         &PropertyPanel::segmentChanged,

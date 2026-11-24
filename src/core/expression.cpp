@@ -59,6 +59,16 @@ std::optional<ExpressionError> Expression::compile(const QString& expression) {
         // instead of on the first evaluate() call.
         m_impl->parser.Eval();
     } catch (const mu::ParserError& error) {
+        // muParser reports an open parenthesis that is never closed as an
+        // unexpected end of the expression ("sin(") or a generic "Missing
+        // parenthesis" ("sin(t"); name the actual problem instead.
+        const auto code = error.GetCode();
+        if ((code == mu::ecUNEXPECTED_EOF || code == mu::ecMISSING_PARENS)
+            && expression.count(QLatin1Char('(')) > expression.count(QLatin1Char(')'))) {
+            return ExpressionError{
+                QStringLiteral("Missing closing parenthesis \")\"."), int(expression.size())
+            };
+        }
         return ExpressionError{fromParserString(error.GetMsg()), error.GetPos()};
     }
 

@@ -20,6 +20,7 @@ private slots:
     void evaluatesReferenceFormula();
     void constantsPiAndEAreAvailable();
     void syntaxErrorReportsPosition();
+    void unclosedParenthesisIsNamed();
     void unknownIdentifierIsCompileError();
     void evaluationNeverThrows();
     void instancesAreIndependent();
@@ -57,6 +58,22 @@ void TestExpression::syntaxErrorReportsPosition() {
     // A failed compile must not leave a stale, previously-working expression
     // reachable through evaluate().
     QCOMPARE(expr.evaluate(1.0), 0.0);
+}
+
+void TestExpression::unclosedParenthesisIsNamed() {
+    // F-298: "sin(" used to read "Unexpected end of expression".
+    for (const QString& text : {QStringLiteral("sin("), QStringLiteral("sin(2*t")}) {
+        Expression expr;
+        const auto error = expr.compile(text);
+        QVERIFY2(error.has_value(), qPrintable(text));
+        QVERIFY2(error->message.contains(QStringLiteral("parenthesis")), qPrintable(error->message));
+        QCOMPARE(error->position, int(text.size()));
+    }
+
+    Expression empty;
+    const auto error = empty.compile(QString());
+    QVERIFY(error.has_value());
+    QVERIFY(! error->message.contains(QStringLiteral("parenthesis")));
 }
 
 void TestExpression::unknownIdentifierIsCompileError() {

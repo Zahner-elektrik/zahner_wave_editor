@@ -38,6 +38,9 @@ signals:
     // A row of the points table was picked, so the canvas can highlight the same
     // point and let the arrow keys act on it.
     void pointSelected(int pointIndex);
+    // Feedback on an edit in progress for the status bar, e.g. why the formula
+    // being typed does not parse; an empty message clears it again.
+    void statusMessage(const QString& message);
 
 private:
     void rebuildForm();

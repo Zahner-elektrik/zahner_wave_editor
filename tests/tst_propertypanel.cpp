@@ -102,6 +102,7 @@ void TestPropertyPanel::formulaTypingRetainsEditorAndCommitsOnce() {
     editor->setFocus();
     QTRY_VERIFY(editor->hasFocus());
     QSignalSpy changed(&panel, &PropertyPanel::segmentChanged);
+    QSignalSpy status(&panel, &PropertyPanel::statusMessage);
 
     editor->selectAll();
     QTest::keyClicks(editor, QStringLiteral("sin("));
@@ -109,12 +110,19 @@ void TestPropertyPanel::formulaTypingRetainsEditorAndCommitsOnce() {
     QVERIFY(editor->hasFocus());
     QCOMPARE(changed.count(), 0);
     QCOMPARE(editor->property("expressionValid").toBool(), false);
+    // F-298: the status bar and the tooltip name the actual problem.
+    QVERIFY(! status.isEmpty());
+    QVERIFY(status.last().at(0).toString().contains(QStringLiteral("parenthesis")));
+    QVERIFY(editor->toolTip().contains(QStringLiteral("parenthesis")));
 
     QTest::keyClicks(editor, QStringLiteral("t)"));
     QCOMPARE(panel.findChild<QLineEdit*>(QStringLiteral("formulaExpressionEdit")), editor);
     QVERIFY(editor->hasFocus());
     QCOMPARE(changed.count(), 0);
     QCOMPARE(editor->property("expressionValid").toBool(), true);
+    // ...and the message is cleared once the expression is valid.
+    QVERIFY(status.last().at(0).toString().isEmpty());
+    QVERIFY(! editor->toolTip().contains(QStringLiteral("parenthesis")));
 
     QTest::keyClick(editor, Qt::Key_Return);
     QTRY_COMPARE(changed.count(), 1);

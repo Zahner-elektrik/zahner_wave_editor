@@ -401,10 +401,13 @@ void PropertyPanel::rebuildForm() {
             } else if constexpr (std::is_same_v<Params, FormulaParams>) {
                 auto* expression = new FormulaEdit(params.expression, this);
                 expression->setObjectName(QStringLiteral("formulaExpressionEdit"));
-                expression->setToolTip(
-                    tr("Use t, constants, operators, and functions. See Help > Formula Reference.")
-                );
-                const auto validate = [expression](const QString& value) {
+                const QString hint =
+                    tr("Use t, constants, operators, and functions. See Help > Formula Reference.");
+                // The status tip alone only reaches the status bar when the mouse
+                // enters the field, so it would keep showing the message from
+                // before the edit. Each edit therefore also reports the current
+                // state through statusMessage(), which clears it once valid.
+                const auto validate = [this, expression, hint](const QString& value, bool edited) {
                     Expression candidate;
                     const auto error = candidate.compile(value);
                     expression->setProperty("expressionValid", ! error.has_value());
@@ -413,13 +416,20 @@ void PropertyPanel::rebuildForm() {
                             QStringLiteral("QLineEdit { border: 1px solid #a02832; }")
                         );
                         expression->setStatusTip(error->message);
+                        expression->setToolTip(error->message + QLatin1Char('\n') + hint);
                     } else {
                         expression->setStyleSheet({});
                         expression->setStatusTip({});
+                        expression->setToolTip(hint);
+                    }
+                    if (edited) {
+                        emit statusMessage(error ? error->message : QString());
                     }
                 };
-                validate(params.expression);
-                connect(expression, &QLineEdit::textChanged, this, validate);
+                validate(params.expression, false);
+                connect(expression, &QLineEdit::textChanged, this, [validate](const QString& value) {
+                    validate(value, true);
+                });
                 connect(expression, &QLineEdit::editingFinished, this, [this, expression] {
                     Expression candidate;
                     const QString value = expression->text();
