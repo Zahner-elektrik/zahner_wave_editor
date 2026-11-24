@@ -16,6 +16,8 @@ add_library(waveui STATIC
     engineeringnotation.h
     exportdialog.cpp
     exportdialog.h
+    filedialogpaths.cpp
+    filedialogpaths.h
     gridbar.cpp
     gridbar.h
     importdialog.cpp

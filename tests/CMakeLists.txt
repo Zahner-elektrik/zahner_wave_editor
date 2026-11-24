@@ -79,6 +79,9 @@ zwe_add_test(tst_gridbar tst_gridbar.cpp)
 target_link_libraries(tst_gridbar PRIVATE waveui)
 set_tests_properties(tst_gridbar PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 
+zwe_add_test(tst_filedialogpaths tst_filedialogpaths.cpp)
+target_link_libraries(tst_filedialogpaths PRIVATE waveui)
+
 # Disabled: the test drives the language from LANG/LC_ALL, but an explicitly
 # stored "application/language" wins over the environment by design - so the
 # test fails on any machine whose developer once picked a language in

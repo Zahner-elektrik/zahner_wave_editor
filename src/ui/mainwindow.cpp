@@ -7,7 +7,6 @@
 #include <QApplication>
 #include <QCloseEvent>
 #include <QDialogButtonBox>
-#include <QDir>
 #include <QDockWidget>
 #include <QDoubleSpinBox>
 #include <QDragEnterEvent>
@@ -58,6 +57,7 @@
 #include "core/zwjio.h"
 #include "editonlyserver.h"
 #include "exportdialog.h"
+#include "filedialogpaths.h"
 #include "gridbar.h"
 #include "helpbrowser.h"
 #include "importdialog.h"
@@ -85,8 +85,6 @@ namespace {
 constexpr auto SettingsGeometryKey    = "mainWindow/geometry";
 constexpr auto SettingsRecentFilesKey = "mainWindow/recentFiles";
 constexpr auto SettingsWindowStateKey = "mainWindow/state";
-constexpr auto SettingsOpenPathKey    = "fileDialogs/openDocumentPath";
-constexpr auto SettingsSavePathKey    = "fileDialogs/saveDocumentPath";
 constexpr auto DocumentFilter         = "Zahner Wave JSON (*.zwj)";
 
 QIcon toolbarIcon(const char* name) {
@@ -942,6 +940,7 @@ bool MainWindow::openDocument(const QString& filePath) {
 
     setDocument(*result.document, fileInfo.absoluteFilePath());
     addRecentFile(fileInfo.absoluteFilePath());
+    filedialogpaths::remember(filedialogpaths::DocumentKey, fileInfo.absoluteFilePath());
     statusBar()->showMessage(tr("Opened %1").arg(fileInfo.fileName()), 4000);
     return true;
 }
@@ -1053,14 +1052,14 @@ void MainWindow::newDocument() {
 }
 
 void MainWindow::openDocumentDialog() {
-    const QString startPath = QSettings().value(QLatin1String(SettingsOpenPathKey)).toString();
+    // Start next to the open document, else where documents were last opened
+    // or saved - never in the working directory (F-297).
+    const QString startPath = filePath_.isEmpty()
+                                ? filedialogpaths::startPath(filedialogpaths::DocumentKey)
+                                : QFileInfo(filePath_).absolutePath();
     const QString filePath =
         QFileDialog::getOpenFileName(this, tr("Open Document"), startPath, tr(DocumentFilter));
-    if (! filePath.isEmpty() && openDocument(filePath)) {
-        QSettings().setValue(
-            QLatin1String(SettingsOpenPathKey), QFileInfo(filePath).absolutePath()
-        );
-    }
+    openDocument(filePath);
 }
 
 bool MainWindow::saveDocument() {
@@ -1082,11 +1081,11 @@ bool MainWindow::saveDocument() {
 bool MainWindow::saveDocumentAs() {
     QString suggestedPath = filePath_;
     if (suggestedPath.isEmpty()) {
-        const QString fileName =
-            document_.name.isEmpty() ? tr("untitled.zwj") : document_.name + ".zwj";
-        const QString directory = QSettings().value(QLatin1String(SettingsSavePathKey)).toString();
-        suggestedPath = directory.isEmpty() ? fileName : QDir(directory).filePath(fileName);
+        suggestedPath = document_.name.isEmpty() ? tr("untitled.zwj") : document_.name + ".zwj";
     }
+    // A bare file name would make the dialog start in the working directory,
+    // the installation folder when Zahner Lab starts the editor (F-297).
+    suggestedPath = filedialogpaths::startPath(filedialogpaths::DocumentKey, suggestedPath);
 
     QString filePath = QFileDialog::getSaveFileName(
         this, tr("Save Document As"), suggestedPath, tr(DocumentFilter)
@@ -1112,7 +1111,7 @@ bool MainWindow::saveDocumentAs() {
     }
 
     filePath_ = newFilePath;
-    QSettings().setValue(QLatin1String(SettingsSavePathKey), QFileInfo(filePath_).absolutePath());
+    filedialogpaths::remember(filedialogpaths::DocumentKey, filePath_);
     undoStack_->setClean();
     addRecentFile(filePath_);
     statusBar()->showMessage(tr("Saved %1").arg(QFileInfo(filePath_).fileName()), 4000);

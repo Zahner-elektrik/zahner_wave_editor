@@ -7,18 +7,17 @@
 #include <QDialogButtonBox>
 #include <QDoubleSpinBox>
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QSettings>
 #include <QSpinBox>
 #include <QVBoxLayout>
 #include <cmath>
 
 #include "core/sampling.h"
+#include "filedialogpaths.h"
 
 namespace zwe {
 
@@ -26,7 +25,6 @@ namespace {
 
 constexpr auto CsvFilter             = "CSV files (*.csv)";
 constexpr auto BinaryFilter          = "Binary wave files (*.bin)";
-constexpr auto SettingsExportPathKey = "fileDialogs/exportCsvPath";
 
 }  // namespace
 
@@ -145,19 +143,14 @@ void ExportDialog::formatChanged() {
 }
 
 void ExportDialog::chooseFile() {
-    QString startPath = filePathEdit_->text();
-    if (startPath.isEmpty()) {
-        startPath = QSettings().value(QLatin1String(SettingsExportPathKey)).toString();
-    }
+    const QString startPath = filedialogpaths::startPath(filedialogpaths::ExportKey, filePath());
     const QString filter =
         format() == ExportFormat::Binary ? tr(BinaryFilter) : tr(CsvFilter);
     const QString selected =
         QFileDialog::getSaveFileName(this, tr("Export Waveform"), startPath, filter);
     if (! selected.isEmpty()) {
         setFilePath(selected);
-        QSettings().setValue(
-            QLatin1String(SettingsExportPathKey), QFileInfo(selected).absolutePath()
-        );
+        filedialogpaths::remember(filedialogpaths::ExportKey, selected);
     }
 }
 

@@ -8,16 +8,16 @@
 #include <QDoubleSpinBox>
 #include <QFile>
 #include <QFileDialog>
-#include <QFileInfo>
 #include <QFormLayout>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPlainTextEdit>
 #include <QPushButton>
-#include <QSettings>
 #include <QVBoxLayout>
 #include <cmath>
+
+#include "filedialogpaths.h"
 
 namespace zwe {
 
@@ -25,7 +25,6 @@ namespace {
 
 constexpr auto CsvFilter             = "CSV files (*.csv);;All files (*)";
 constexpr int PreviewLineCount       = 8;
-constexpr auto SettingsImportPathKey = "fileDialogs/importCsvPath";
 
 int columnCount(const QString& row) {
     const bool hasSemicolon = row.contains(';');
@@ -137,17 +136,12 @@ void ImportDialog::setFilePath(const QString& filePath) {
 }
 
 void ImportDialog::chooseFile() {
-    QString startPath = QFileInfo(filePath()).absolutePath();
-    if (filePath().isEmpty()) {
-        startPath = QSettings().value(QLatin1String(SettingsImportPathKey)).toString();
-    }
+    const QString startPath = filedialogpaths::startPath(filedialogpaths::ImportCsvKey, filePath());
     const QString selected =
         QFileDialog::getOpenFileName(this, tr("Import CSV"), startPath, tr(CsvFilter));
     if (! selected.isEmpty()) {
         setFilePath(selected);
-        QSettings().setValue(
-            QLatin1String(SettingsImportPathKey), QFileInfo(selected).absolutePath()
-        );
+        filedialogpaths::remember(filedialogpaths::ImportCsvKey, selected);
     }
 }
 
